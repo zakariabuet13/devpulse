@@ -1,4 +1,4 @@
-﻿import { healthSchema } from "@devpulse/shared";
+import { healthSchema } from "@devpulse/shared";
 
 export default function Home() {
   const health = healthSchema.parse({ status: "ok" });

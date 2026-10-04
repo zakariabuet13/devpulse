@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import { healthSchema } from "@devpulse/shared";
 
 const app = express();
