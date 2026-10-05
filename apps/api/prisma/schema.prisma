@@ -14,6 +14,18 @@ enum Priority {
   URGENT
 }
 
+enum IssueState {
+  OPEN
+  CLOSED
+}
+
+// `state` is the source of truth; `mergedAt` is set only when state = MERGED.
+enum PrState {
+  OPEN
+  CLOSED
+  MERGED
+}
+
 model Team {
   id           String       @id @default(uuid())
   name         String
@@ -49,7 +61,7 @@ model Issue {
   repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   number          Int
   title           String
-  state           String
+  state           IssueState
   labels          String[]
   priority        Priority   @default(MEDIUM)
   aiSummary       String?
@@ -64,7 +76,7 @@ model PullRequest {
   repository        Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   number            Int
   title             String
-  state             String
+  state             PrState
   author            String
   reviewRequestedAt DateTime?
   mergedAt          DateTime?

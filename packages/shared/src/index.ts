@@ -22,16 +22,25 @@ export const prioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
 export type Priority = z.infer<typeof prioritySchema>;
 
+export const issueStateSchema = z.enum(["OPEN", "CLOSED"]);
+
+export type IssueState = z.infer<typeof issueStateSchema>;
+
+// `state` is the source of truth; `mergedAt` is set only when state = MERGED.
+export const prStateSchema = z.enum(["OPEN", "CLOSED", "MERGED"]);
+
+export type PrState = z.infer<typeof prStateSchema>;
+
 export const issueSchema = z.object({
   id: z.string(),
   repositoryId: z.string(),
   number: z.number().int(),
   title: z.string(),
-  state: z.string(),
+  state: issueStateSchema,
   labels: z.array(z.string()),
   priority: prioritySchema,
   aiSummary: z.string().nullable(),
-  githubCreatedAt: z.string().datetime(),
+  githubCreatedAt: z.iso.datetime(),
 });
 
 export type Issue = z.infer<typeof issueSchema>;
@@ -41,10 +50,10 @@ export const pullRequestSchema = z.object({
   repositoryId: z.string(),
   number: z.number().int(),
   title: z.string(),
-  state: z.string(),
+  state: prStateSchema,
   author: z.string(),
-  reviewRequestedAt: z.string().datetime().nullable(),
-  mergedAt: z.string().datetime().nullable(),
+  reviewRequestedAt: z.iso.datetime().nullable(),
+  mergedAt: z.iso.datetime().nullable(),
 });
 
 export type PullRequest = z.infer<typeof pullRequestSchema>;

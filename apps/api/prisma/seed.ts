@@ -24,16 +24,16 @@ async function main() {
   ]);
 
   const issues = [
-    [api.id, 1, "Crash on empty payload", "open", ["bug"], "URGENT"],
-    [api.id, 2, "Add rate limiting", "open", ["enhancement"], "HIGH"],
-    [api.id, 3, "Document POST /teams", "closed", ["docs"], "LOW"],
-    [api.id, 4, "Slow query on issue list", "open", ["performance", "bug"], "HIGH"],
-    [api.id, 5, "Upgrade Express", "closed", ["chore"], "MEDIUM"],
-    [web.id, 1, "Dark mode contrast", "open", ["ui"], "MEDIUM"],
-    [web.id, 2, "Team page 404", "open", ["bug"], "URGENT"],
-    [web.id, 3, "Add loading skeletons", "open", ["ui", "enhancement"], "LOW"],
-    [web.id, 4, "Fix hydration warning", "closed", ["bug"], "MEDIUM"],
-    [web.id, 5, "Keyboard navigation", "open", ["a11y"], "HIGH"],
+    [api.id, 1, "Crash on empty payload", "OPEN", ["bug"], "URGENT"],
+    [api.id, 2, "Add rate limiting", "OPEN", ["enhancement"], "HIGH"],
+    [api.id, 3, "Document POST /teams", "CLOSED", ["docs"], "LOW"],
+    [api.id, 4, "Slow query on issue list", "OPEN", ["performance", "bug"], "HIGH"],
+    [api.id, 5, "Upgrade Express", "CLOSED", ["chore"], "MEDIUM"],
+    [web.id, 1, "Dark mode contrast", "OPEN", ["ui"], "MEDIUM"],
+    [web.id, 2, "Team page 404", "OPEN", ["bug"], "URGENT"],
+    [web.id, 3, "Add loading skeletons", "OPEN", ["ui", "enhancement"], "LOW"],
+    [web.id, 4, "Fix hydration warning", "CLOSED", ["bug"], "MEDIUM"],
+    [web.id, 5, "Keyboard navigation", "OPEN", ["a11y"], "HIGH"],
   ] as const;
 
   await prisma.issue.createMany({
@@ -50,11 +50,11 @@ async function main() {
 
   await prisma.pullRequest.createMany({
     data: [
-      { repositoryId: api.id, number: 6, title: "Fix empty payload crash", state: "open", author: "ada", reviewRequestedAt: daysAgo(1) },
-      { repositoryId: api.id, number: 7, title: "Add rate limiter", state: "merged", author: "grace", reviewRequestedAt: daysAgo(6), mergedAt: daysAgo(4) },
-      { repositoryId: api.id, number: 8, title: "Bump Express", state: "merged", author: "linus", mergedAt: daysAgo(10) },
-      { repositoryId: web.id, number: 6, title: "Contrast tweaks", state: "open", author: "grace", reviewRequestedAt: daysAgo(2) },
-      { repositoryId: web.id, number: 7, title: "Fix team 404", state: "open", author: "linus" },
+      { repositoryId: api.id, number: 6, title: "Fix empty payload crash", state: "OPEN", author: "ada", reviewRequestedAt: daysAgo(1) },
+      { repositoryId: api.id, number: 7, title: "Add rate limiter", state: "MERGED", author: "grace", reviewRequestedAt: daysAgo(6), mergedAt: daysAgo(4) },
+      { repositoryId: api.id, number: 8, title: "Bump Express", state: "MERGED", author: "linus", mergedAt: daysAgo(10) },
+      { repositoryId: web.id, number: 6, title: "Contrast tweaks", state: "OPEN", author: "grace", reviewRequestedAt: daysAgo(2) },
+      { repositoryId: web.id, number: 7, title: "Fix team 404", state: "OPEN", author: "linus" },
     ],
   });
 
