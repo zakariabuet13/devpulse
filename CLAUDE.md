@@ -4,6 +4,9 @@ Run from repo root:
 
 - `npm run dev` — web (:3000) + api (:4000) in parallel.
 - Single workspace: `npm run dev -w apps/api`, `npm run typecheck -w apps/web`, etc.
+- `npm run db:seed -w apps/api` - deletes all teams first (cascade), then re-creates the sample data
+- `npm run db:reset -w apps/api` - wipes the DB, re-runs migrations and seed
+- `docker compose up -d` - starts the Postgres DB in docker
 
 ## Architecture
 
@@ -19,7 +22,12 @@ Run from repo root:
 
 - Web `typecheck` is `next typegen && tsc --noEmit`: Next 16 generates global types (e.g. `LayoutProps`) that plain `tsc` can't see.
 - api `lint` is just `tsc --noEmit` (no ESLint there); only web has ESLint.
+- Postgres runs on 5435, not the default 5432
 
 ## Workflow
 
 - After a series of edits, run `npm run typecheck`, not the full build.
+
+## Compact Instructions
+
+- keep final Prisma models, shared zod schema names
