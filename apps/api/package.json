@@ -8,9 +8,11 @@
     "build": "tsup src/index.ts --format esm --noExternal @devpulse/shared",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@devpulse/shared": "*",
