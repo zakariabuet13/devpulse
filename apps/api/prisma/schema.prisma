@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Team {
+  id           String       @id @default(uuid())
+  name         String
+  createdAt    DateTime     @default(now())
+  members      Member[]
+  repositories Repository[]
+}
+
+model Member {
+  id          String @id @default(uuid())
+  name        String
+  githubLogin String @unique
+  teamId      String
+  team        Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+model Repository {
+  id             String        @id @default(uuid())
+  githubFullName String        @unique
+  teamId         String
+  team           Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  issues         Issue[]
+  pullRequests   PullRequest[]
+
+  @@index([teamId])
+}
+
+model Issue {
+  id              String     @id @default(uuid())
+  repositoryId    String
+  repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  number          Int
+  title           String
+  state           String
+  labels          String[]
+  priority        Priority   @default(MEDIUM)
+  aiSummary       String?
+  githubCreatedAt DateTime
+
+  @@unique([repositoryId, number])
+}
+
+model PullRequest {
+  id                String     @id @default(uuid())
+  repositoryId      String
+  repository        Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  number            Int
+  title             String
+  state             String
+  author            String
+  reviewRequestedAt DateTime?
+  mergedAt          DateTime?
+
+  @@unique([repositoryId, number])
+}
