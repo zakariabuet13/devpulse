@@ -31,3 +31,9 @@ Run from repo root:
 ## Compact Instructions
 
 - keep final Prisma models, shared zod schema names
+
+## Git
+
+- branches `feat/<slug>` or `fix/<slug>`
+- open PRs against `main`
+- squash-merge
