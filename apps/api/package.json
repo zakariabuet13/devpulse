@@ -12,17 +12,23 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "smoke": "bash scripts/smoke.sh"
   },
   "dependencies": {
     "@devpulse/shared": "*",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "cors": "^2.8.6",
     "dotenv": "17.4.2",
     "express": "^5.0.0",
-    "pg": "8.23.1"
+    "pg": "8.23.1",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
