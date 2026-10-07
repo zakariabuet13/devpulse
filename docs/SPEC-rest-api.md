@@ -40,7 +40,7 @@ Unknown route -> 404 through the same error handler (code `NOT_FOUND`, message `
 
 ## 3. Validation (packages/shared)
 
-All additions go in `packages/shared/src/index.ts` (source only, no build). Export Zod schema + inferred type for each.
+Group the schemas in separate files based on prisma model. For example: `packages/shared/src/team.ts`, `packages/shared/src/repository.ts`, etc. `packages/shared/src/index.ts` should export all of these as named exports. (source only, no build). Export Zod schema + inferred type for each.
 
 - `teamSchema`: `{ id, name, createdAt: z.iso.datetime() }`. No longer derived via `createTeamSchema.extend(...)`.
 - `createTeamSchema`: unchanged (`name` trim, min 1). Add `.max(100)` to all `name` fields.
@@ -176,8 +176,7 @@ Prereqs: Docker running, `.env` copied from `.env.example`.
 3. `npm run typecheck` (root).
 4. Dev mode: `PORT=4100 npm run dev -w apps/api` in background; wait for `/health`; run `BASE_URL=http://localhost:4100 MODE=dev npm run smoke -w apps/api`; stop server.
 5. Prod mode: `NODE_ENV=production PORT=4100 npx tsx apps/api/src/index.ts` in background; run `BASE_URL=http://localhost:4100 MODE=prod npm run smoke -w apps/api`; stop server.
-6. `git status` shows only files listed in section 
-7. Report each step's output; any non-zero exit or assertion failure = not done.
+6. `git status` shows only files listed in section 7. Report each step's output; any non-zero exit or assertion failure = not done.
 
 `apps/api/scripts/smoke.sh` (bash, curl only, no jq; asserts HTTP status plus `grep -q` on compact JSON; exits non-zero on first failure; prints PASS/FAIL per check). Checks:
 - `GET /health` 200.

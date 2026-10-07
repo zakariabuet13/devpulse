@@ -3,7 +3,12 @@ import { prisma } from "../src/db";
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
 
 async function main() {
-  await prisma.team.deleteMany(); // cascades to everything below
+  // Team FKs are Restrict, so delete children first.
+  await prisma.pullRequest.deleteMany();
+  await prisma.issue.deleteMany();
+  await prisma.repository.deleteMany();
+  await prisma.member.deleteMany();
+  await prisma.team.deleteMany();
 
   const team = await prisma.team.create({
     data: {
