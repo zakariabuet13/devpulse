@@ -44,34 +44,6 @@ describe("GET /repositories/:id/issues", () => {
     expect(res.body.items).toHaveLength(2);
   });
 
-  it("sorts by priority ascending (LOW first)", async () => {
-    const repo = await createRepository();
-    for (const priority of ["URGENT", "LOW", "HIGH", "MEDIUM"] as const) {
-      await createIssue({ repositoryId: repo.id, priority });
-    }
-
-    const res = await request(createApp()).get(
-      `/repositories/${repo.id}/issues?sort=priority&order=asc`,
-    );
-
-    expect(res.status).toBe(200);
-    expect(res.body.items[0].priority).toBe("LOW");
-  });
-
-  it("pages without overlap", async () => {
-    const repo = await createRepository();
-    for (let i = 0; i < 5; i++) await createIssue({ repositoryId: repo.id });
-    const app = createApp();
-
-    const p0 = await request(app).get(`/repositories/${repo.id}/issues?limit=2&offset=0`);
-    const p1 = await request(app).get(`/repositories/${repo.id}/issues?limit=2&offset=2`);
-
-    expect(p0.status).toBe(200);
-    expect(p1.status).toBe(200);
-    const ids = [...p0.body.items, ...p1.body.items].map((i: { id: string }) => i.id);
-    expect(new Set(ids).size).toBe(4);
-  });
-
   it("rejects an invalid state with 400", async () => {
     const repo = await createRepository();
 
@@ -80,94 +52,7 @@ describe("GET /repositories/:id/issues", () => {
     expect(res.status).toBe(400);
   });
 
-  it("404s for a missing repository", async () => {
-    const res = await request(createApp()).get("/repositories/nope/issues");
-
-    expect(res.status).toBe(404);
-  });
-});
-
-describe("/issues/:id", () => {
-  it("PATCH updates priority and GET reflects it", async () => {
-    const issue = await createIssue({ priority: "HIGH" });
-    const app = createApp();
-
-    const patched = await request(app).patch(`/issues/${issue.id}`).send({ priority: "LOW" });
-    const fetched = await request(app).get(`/issues/${issue.id}`);
-
-    expect(patched.status).toBe(200);
-    expect(patched.body.priority).toBe("LOW");
-    expect(fetched.status).toBe(200);
-    expect(fetched.body.priority).toBe("LOW");
-  });
-
-  it.each([
-    ["non-writable field", { title: "x" }],
-    ["invalid priority", { priority: "NOPE" }],
-  ])("PATCH with %s is 400", async (_label, body) => {
-    const issue = await createIssue();
-
-    const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
-
-    expect(res.status).toBe(400);
-  });
-
-  it("PATCH with a valid priority plus another key is rejected and nothing changes", async () => {
-    const issue = await createIssue({ priority: "HIGH", title: "before" });
-
-    const res = await request(createApp())
-      .patch(`/issues/${issue.id}`)
-      .send({ priority: "LOW", title: "x" });
-
-    expect(res.status).toBe(400);
-    const row = await prisma.issue.findUnique({ where: { id: issue.id } });
-    expect(row).toMatchObject({ priority: "HIGH", title: "before" });
-  });
-
-  it.each([
-    ["empty body", {}],
-    ["labels", { labels: ["x"] }],
-    ["state", { state: "CLOSED" }],
-    ["aiSummary", { aiSummary: "x" }],
-  ])("PATCH with %s is 400", async (_label, body) => {
-    const issue = await createIssue();
-
-    const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
-
-    expect(res.status).toBe(400);
-  });
-
-  it("PATCH persists the priority", async () => {
-    const issue = await createIssue({ priority: "HIGH" });
-
-    await request(createApp()).patch(`/issues/${issue.id}`).send({ priority: "URGENT" });
-
-    expect((await prisma.issue.findUnique({ where: { id: issue.id } }))?.priority).toBe("URGENT");
-  });
-
-  it("GET / PATCH of a missing issue is 404 'Issue not found'", async () => {
-    const app = createApp();
-
-    const get = await request(app).get("/issues/nope");
-    const patch = await request(app).patch("/issues/nope").send({ priority: "LOW" });
-
-    for (const res of [get, patch]) {
-      expect(res.status).toBe(404);
-      expect(res.body.error).toMatchObject({ code: "NOT_FOUND", message: "Issue not found" });
-    }
-  });
-
-  it.each(["post", "delete"] as const)("%s /issues has no route (404)", async (method) => {
-    const issue = await createIssue();
-    const app = createApp();
-
-    expect((await request(app)[method]("/issues")).status).toBe(404);
-    expect((await request(app)[method](`/issues/${issue.id}`)).status).toBe(404);
-  });
-});
-
-describe("issue list: scoping, ordering, paging, validation", () => {
-  const d = (day: string) => new Date(`2024-01-${day}T00:00:00Z`);
+  const d =(day: string) => new Date(`2024-01-${day}T00:00:00Z`);
 
   it("only returns the requested repository's issues", async () => {
     const repo = await createRepository();
@@ -267,5 +152,84 @@ describe("issue list: scoping, ordering, paging, validation", () => {
     const res = await request(createApp()).get("/repositories/nope/issues");
 
     expect(res.body.error.message).toBe("Repository not found");
+  });
+});
+
+describe("/issues/:id", () => {
+  it("PATCH updates priority and GET reflects it", async () => {
+    const issue = await createIssue({ priority: "HIGH" });
+    const app = createApp();
+
+    const patched = await request(app).patch(`/issues/${issue.id}`).send({ priority: "LOW" });
+    const fetched = await request(app).get(`/issues/${issue.id}`);
+
+    expect(patched.status).toBe(200);
+    expect(patched.body.priority).toBe("LOW");
+    expect(fetched.status).toBe(200);
+    expect(fetched.body.priority).toBe("LOW");
+  });
+
+  it.each([
+    ["non-writable field", { title: "x" }],
+    ["invalid priority", { priority: "NOPE" }],
+  ])("PATCH with %s is 400", async (_label, body) => {
+    const issue = await createIssue();
+
+    const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH with a valid priority plus another key is rejected and nothing changes", async () => {
+    const issue = await createIssue({ priority: "HIGH", title: "before" });
+
+    const res = await request(createApp())
+      .patch(`/issues/${issue.id}`)
+      .send({ priority: "LOW", title: "x" });
+
+    expect(res.status).toBe(400);
+    const row = await prisma.issue.findUnique({ where: { id: issue.id } });
+    expect(row).toMatchObject({ priority: "HIGH", title: "before" });
+  });
+
+  it.each([
+    ["empty body", {}],
+    ["labels", { labels: ["x"] }],
+    ["state", { state: "CLOSED" }],
+    ["aiSummary", { aiSummary: "x" }],
+  ])("PATCH with %s is 400", async (_label, body) => {
+    const issue = await createIssue();
+
+    const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH persists the priority", async () => {
+    const issue = await createIssue({ priority: "HIGH" });
+
+    await request(createApp()).patch(`/issues/${issue.id}`).send({ priority: "URGENT" });
+
+    expect((await prisma.issue.findUnique({ where: { id: issue.id } }))?.priority).toBe("URGENT");
+  });
+
+  it("GET / PATCH of a missing issue is 404 'Issue not found'", async () => {
+    const app = createApp();
+
+    const get = await request(app).get("/issues/nope");
+    const patch = await request(app).patch("/issues/nope").send({ priority: "LOW" });
+
+    for (const res of [get, patch]) {
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatchObject({ code: "NOT_FOUND", message: "Issue not found" });
+    }
+  });
+
+  it.each(["post", "delete"] as const)("%s /issues has no route (404)", async (method) => {
+    const issue = await createIssue();
+    const app = createApp();
+
+    expect((await request(app)[method]("/issues")).status).toBe(404);
+    expect((await request(app)[method](`/issues/${issue.id}`)).status).toBe(404);
   });
 });

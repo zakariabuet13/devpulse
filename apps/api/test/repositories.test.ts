@@ -22,6 +22,21 @@ describe("GET /teams/:teamId/repositories", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it("lists a team's repositories ordered by githubFullName ascending", async () => {
+    const team = await createTeam();
+    for (const githubFullName of ["org/c", "org/a", "org/b"]) {
+      await createRepository({ teamId: team.id, githubFullName });
+    }
+
+    const res = await request(createApp()).get(`/teams/${team.id}/repositories`);
+
+    expect(res.body.items.map((r: { githubFullName: string }) => r.githubFullName)).toEqual([
+      "org/a",
+      "org/b",
+      "org/c",
+    ]);
+  });
 });
 
 describe("POST /teams/:teamId/repositories", () => {
@@ -73,6 +88,29 @@ describe("POST /teams/:teamId/repositories", () => {
       code: "CONFLICT",
       message: "githubFullName already exists",
     });
+  });
+
+  it("POST under a missing team is 404 'Team not found'", async () => {
+    const res = await request(createApp())
+      .post("/teams/nope/repositories")
+      .send({ githubFullName: "org/repo" });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.message).toBe("Team not found");
+  });
+
+  it.each([
+    ["no owner", "repo"],
+    ["owner longer than 39 chars", `${"o".repeat(40)}/repo`],
+    ["empty repo part", "org/"],
+  ])("POST with %s is 400", async (_label, githubFullName) => {
+    const team = await createTeam();
+
+    const res = await request(createApp())
+      .post(`/teams/${team.id}/repositories`)
+      .send({ githubFullName });
+
+    expect(res.status).toBe(400);
   });
 });
 
@@ -199,43 +237,5 @@ describe("/repositories/:id", () => {
     expect(issues.body.total).toBe(1);
     expect(prs.body.total).toBe(1);
     expect((await request(app).get(`/teams/${target.id}/repositories`)).body.total).toBe(1);
-  });
-
-  it("POST under a missing team is 404 'Team not found'", async () => {
-    const res = await request(createApp())
-      .post("/teams/nope/repositories")
-      .send({ githubFullName: "org/repo" });
-
-    expect(res.status).toBe(404);
-    expect(res.body.error.message).toBe("Team not found");
-  });
-
-  it("lists a team's repositories ordered by githubFullName ascending", async () => {
-    const team = await createTeam();
-    for (const githubFullName of ["org/c", "org/a", "org/b"]) {
-      await createRepository({ teamId: team.id, githubFullName });
-    }
-
-    const res = await request(createApp()).get(`/teams/${team.id}/repositories`);
-
-    expect(res.body.items.map((r: { githubFullName: string }) => r.githubFullName)).toEqual([
-      "org/a",
-      "org/b",
-      "org/c",
-    ]);
-  });
-
-  it.each([
-    ["no owner", "repo"],
-    ["owner longer than 39 chars", `${"o".repeat(40)}/repo`],
-    ["empty repo part", "org/"],
-  ])("POST with %s is 400", async (_label, githubFullName) => {
-    const team = await createTeam();
-
-    const res = await request(createApp())
-      .post(`/teams/${team.id}/repositories`)
-      .send({ githubFullName });
-
-    expect(res.status).toBe(400);
   });
 });
