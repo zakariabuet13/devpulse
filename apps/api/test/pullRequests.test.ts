@@ -30,47 +30,8 @@ describe("GET /repositories/:id/pull-requests", () => {
     expect(res.body.items[0].state).toBe("MERGED");
     expect(res.body.items[0].mergedAt).not.toBeNull();
   });
-});
 
-describe("/pull-requests/:id", () => {
-  it("GET returns the pull request", async () => {
-    const pr = await createPullRequest();
-
-    const res = await request(createApp()).get(`/pull-requests/${pr.id}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.id).toBe(pr.id);
-  });
-
-  it("PATCH has no route (404)", async () => {
-    const pr = await createPullRequest();
-
-    const res = await request(createApp()).patch(`/pull-requests/${pr.id}`).send({ title: "x" });
-
-    expect(res.status).toBe(404);
-  });
-
-  it("GET of a missing pull request is 404 'Pull request not found'", async () => {
-    const res = await request(createApp()).get("/pull-requests/nope");
-
-    expect(res.status).toBe(404);
-    expect(res.body.error).toMatchObject({
-      code: "NOT_FOUND",
-      message: "Pull request not found",
-    });
-  });
-
-  it.each(["post", "delete"] as const)("%s /pull-requests has no route (404)", async (method) => {
-    const pr = await createPullRequest();
-    const app = createApp();
-
-    expect((await request(app)[method]("/pull-requests")).status).toBe(404);
-    expect((await request(app)[method](`/pull-requests/${pr.id}`)).status).toBe(404);
-  });
-});
-
-describe("pull request list: ordering, filtering, validation", () => {
-  const d = (day: string) => new Date(`2024-01-${day}T00:00:00Z`);
+  const d =(day: string) => new Date(`2024-01-${day}T00:00:00Z`);
 
   async function seedThree() {
     const repo = await createRepository();
@@ -125,6 +86,7 @@ describe("pull request list: ordering, filtering, validation", () => {
     }
 
     expect(new Set(ids).size).toBe(5);
+    expect(ids).toEqual([...ids].sort());
   });
 
   it.each([["sort=bogus"], ["order=sideways"], ["state=BOGUS"], ["state="], ["limit=0"], ["offset=-1"]])(
@@ -144,5 +106,42 @@ describe("pull request list: ordering, filtering, validation", () => {
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toBe("Repository not found");
+  });
+});
+
+describe("/pull-requests/:id", () => {
+  it("GET returns the pull request", async () => {
+    const pr = await createPullRequest();
+
+    const res = await request(createApp()).get(`/pull-requests/${pr.id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(pr.id);
+  });
+
+  it("PATCH has no route (404)", async () => {
+    const pr = await createPullRequest();
+
+    const res = await request(createApp()).patch(`/pull-requests/${pr.id}`).send({ title: "x" });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("GET of a missing pull request is 404 'Pull request not found'", async () => {
+    const res = await request(createApp()).get("/pull-requests/nope");
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatchObject({
+      code: "NOT_FOUND",
+      message: "Pull request not found",
+    });
+  });
+
+  it.each(["post", "delete"] as const)("%s /pull-requests has no route (404)", async (method) => {
+    const pr = await createPullRequest();
+    const app = createApp();
+
+    expect((await request(app)[method]("/pull-requests")).status).toBe(404);
+    expect((await request(app)[method](`/pull-requests/${pr.id}`)).status).toBe(404);
   });
 });

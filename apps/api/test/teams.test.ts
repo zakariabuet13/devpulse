@@ -35,6 +35,56 @@ describe("GET /teams", () => {
     expect(res.status).toBe(400);
     expect(Array.isArray(res.body.error)).toBe(true);
   });
+
+  it("orders by createdAt ascending regardless of insert order", async () => {
+    await createTeam({ name: "B", createdAt: new Date("2024-01-02T00:00:00Z") });
+    await createTeam({ name: "C", createdAt: new Date("2024-01-03T00:00:00Z") });
+    await createTeam({ name: "A", createdAt: new Date("2024-01-01T00:00:00Z") });
+
+    const res = await request(createApp()).get("/teams");
+
+    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["A", "B", "C"]);
+  });
+
+  it("offset skips exactly offset rows", async () => {
+    for (const day of ["01", "02", "03"]) {
+      await createTeam({ name: `T${day}`, createdAt: new Date(`2024-01-${day}T00:00:00Z`) });
+    }
+
+    const res = await request(createApp()).get("/teams?limit=1&offset=1");
+
+    expect(res.body).toMatchObject({ total: 3, limit: 1, offset: 1 });
+    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["T02"]);
+  });
+
+  it("pages through rows with identical createdAt using the id tiebreaker", async () => {
+    const same = new Date("2024-01-01T00:00:00Z");
+    for (let i = 0; i < 5; i++) await createTeam({ createdAt: same });
+    const app = createApp();
+
+    const ids: string[] = [];
+    for (const offset of [0, 2, 4]) {
+      const res = await request(app).get(`/teams?limit=2&offset=${offset}`);
+      ids.push(...res.body.items.map((t: { id: string }) => t.id));
+    }
+
+    expect(new Set(ids).size).toBe(5);
+    expect(ids).toEqual([...ids].sort());
+  });
+
+  it("accepts limit=100 and echoes it", async () => {
+    const res = await request(createApp()).get("/teams?limit=100");
+
+    expect(res.status).toBe(200);
+    expect(res.body.limit).toBe(100);
+  });
+
+  it.each(["-1", "abc"])("rejects offset=%s with a ZodIssue[] body", async (offset) => {
+    const res = await request(createApp()).get(`/teams?offset=${offset}`);
+
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+  });
 });
 
 describe("POST /teams", () => {
@@ -190,57 +240,5 @@ describe("/teams/:id", () => {
     await request(createApp()).patch(`/teams/${team.id}`).send({ name: "after" });
 
     expect((await prisma.team.findUnique({ where: { id: team.id } }))?.name).toBe("after");
-  });
-});
-
-describe("GET /teams ordering and paging", () => {
-  it("orders by createdAt ascending regardless of insert order", async () => {
-    await createTeam({ name: "B", createdAt: new Date("2024-01-02T00:00:00Z") });
-    await createTeam({ name: "C", createdAt: new Date("2024-01-03T00:00:00Z") });
-    await createTeam({ name: "A", createdAt: new Date("2024-01-01T00:00:00Z") });
-
-    const res = await request(createApp()).get("/teams");
-
-    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["A", "B", "C"]);
-  });
-
-  it("offset skips exactly offset rows", async () => {
-    for (const day of ["01", "02", "03"]) {
-      await createTeam({ name: `T${day}`, createdAt: new Date(`2024-01-${day}T00:00:00Z`) });
-    }
-
-    const res = await request(createApp()).get("/teams?limit=1&offset=1");
-
-    expect(res.body).toMatchObject({ total: 3, limit: 1, offset: 1 });
-    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["T02"]);
-  });
-
-  it("pages through rows with identical createdAt using the id tiebreaker", async () => {
-    const same = new Date("2024-01-01T00:00:00Z");
-    for (let i = 0; i < 5; i++) await createTeam({ createdAt: same });
-    const app = createApp();
-
-    const ids: string[] = [];
-    for (const offset of [0, 2, 4]) {
-      const res = await request(app).get(`/teams?limit=2&offset=${offset}`);
-      ids.push(...res.body.items.map((t: { id: string }) => t.id));
-    }
-
-    expect(new Set(ids).size).toBe(5);
-    expect(ids).toEqual([...ids].sort());
-  });
-
-  it("accepts limit=100 and echoes it", async () => {
-    const res = await request(createApp()).get("/teams?limit=100");
-
-    expect(res.status).toBe(200);
-    expect(res.body.limit).toBe(100);
-  });
-
-  it.each(["-1", "abc"])("rejects offset=%s with a ZodIssue[] body", async (offset) => {
-    const res = await request(createApp()).get(`/teams?offset=${offset}`);
-
-    expect(res.status).toBe(400);
-    expect(Array.isArray(res.body.error)).toBe(true);
   });
 });

@@ -24,6 +24,21 @@ describe("GET /teams/:teamId/members", () => {
 
     expect(res.status).toBe(404);
   });
+
+  it("lists a team's members ordered by name ascending", async () => {
+    const team = await createTeam();
+    for (const name of ["Charlie", "Alice", "Bob"]) {
+      await createMember({ teamId: team.id, name });
+    }
+
+    const res = await request(createApp()).get(`/teams/${team.id}/members`);
+
+    expect(res.body.items.map((m: { name: string }) => m.name)).toEqual([
+      "Alice",
+      "Bob",
+      "Charlie",
+    ]);
+  });
 });
 
 describe("POST /teams/:teamId/members", () => {
@@ -76,80 +91,45 @@ describe("POST /teams/:teamId/members", () => {
 
     expect(res.status).toBe(400);
   });
-});
 
-describe("PATCH /members/:id", () => {
-  it("allows changing the case of the member's own login", async () => {
-    const member = await createMember({ githubLogin: "smoke-user" });
-
+  it("POST under a missing team is 404 'Team not found'", async () => {
     const res = await request(createApp())
-      .patch(`/members/${member.id}`)
-      .send({ githubLogin: "SMOKE-USER" });
-
-    expect(res.status).toBe(200);
-    expect(res.body.githubLogin).toBe("SMOKE-USER");
-  });
-
-  it("moves the member to another team", async () => {
-    const member = await createMember();
-    const target = await createTeam();
-
-    const res = await request(createApp())
-      .patch(`/members/${member.id}`)
-      .send({ teamId: target.id });
-
-    expect(res.status).toBe(200);
-    expect(res.body.teamId).toBe(target.id);
-  });
-
-  it("404s when moving to a missing team", async () => {
-    const member = await createMember();
-
-    const res = await request(createApp())
-      .patch(`/members/${member.id}`)
-      .send({ teamId: "missing" });
+      .post("/teams/nope/members")
+      .send({ name: "X", githubLogin: "x-user" });
 
     expect(res.status).toBe(404);
+    expect(res.body.error.message).toBe("Team not found");
   });
 
-  // Regression: an empty teamId used to skip the team check and hit the FK -> 409.
-  it("rejects empty teamId with 400 and a ZodIssue[] at path [teamId]", async () => {
-    const member = await createMember();
+  it.each([
+    ["login with a double hyphen", { name: "X", githubLogin: "a--b" }],
+    ["login with a trailing hyphen", { name: "X", githubLogin: "x-" }],
+    ["login longer than 39 chars", { name: "X", githubLogin: "a".repeat(40) }],
+    ["blank name", { name: "   ", githubLogin: "x-user" }],
+    ["name longer than 100 chars", { name: "n".repeat(101), githubLogin: "x-user" }],
+    ["missing githubLogin", { name: "X" }],
+  ])("POST with %s is 400", async (_label, body) => {
+    const team = await createTeam();
 
-    const res = await request(createApp()).patch(`/members/${member.id}`).send({ teamId: "" });
+    const res = await request(createApp()).post(`/teams/${team.id}/members`).send(body);
 
     expect(res.status).toBe(400);
     expect(Array.isArray(res.body.error)).toBe(true);
-    expect(res.body.error[0].path).toEqual(["teamId"]);
   });
-});
 
-describe("DELETE /members/:id", () => {
-  it("deletes, then 404s", async () => {
-    const member = await createMember();
-    const app = createApp();
-
-    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(204);
-    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(404);
-  });
-});
-
-describe("members: ordering, 404s, conflicts, strictness", () => {
-  it("lists a team's members ordered by name ascending", async () => {
+  it("POST trims the name", async () => {
     const team = await createTeam();
-    for (const name of ["Charlie", "Alice", "Bob"]) {
-      await createMember({ teamId: team.id, name });
-    }
 
-    const res = await request(createApp()).get(`/teams/${team.id}/members`);
+    const res = await request(createApp())
+      .post(`/teams/${team.id}/members`)
+      .send({ name: "  Ada  ", githubLogin: "ada" });
 
-    expect(res.body.items.map((m: { name: string }) => m.name)).toEqual([
-      "Alice",
-      "Bob",
-      "Charlie",
-    ]);
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe("Ada");
   });
+});
 
+describe("/members/:id", () => {
   it("GET of a missing member is 404 'Member not found'", async () => {
     const res = await request(createApp()).get("/members/nope");
 
@@ -166,13 +146,48 @@ describe("members: ordering, 404s, conflicts, strictness", () => {
     expect(res.body).toMatchObject({ id: member.id, githubLogin: "ada", teamId: member.teamId });
   });
 
-  it("POST under a missing team is 404 'Team not found'", async () => {
+  it("PATCH allows changing the case of the member's own login", async () => {
+    const member = await createMember({ githubLogin: "smoke-user" });
+
     const res = await request(createApp())
-      .post("/teams/nope/members")
-      .send({ name: "X", githubLogin: "x-user" });
+      .patch(`/members/${member.id}`)
+      .send({ githubLogin: "SMOKE-USER" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.githubLogin).toBe("SMOKE-USER");
+  });
+
+  it("PATCH moves the member to another team", async () => {
+    const member = await createMember();
+    const target = await createTeam();
+
+    const res = await request(createApp())
+      .patch(`/members/${member.id}`)
+      .send({ teamId: target.id });
+
+    expect(res.status).toBe(200);
+    expect(res.body.teamId).toBe(target.id);
+  });
+
+  it("PATCH 404s when moving to a missing team", async () => {
+    const member = await createMember();
+
+    const res = await request(createApp())
+      .patch(`/members/${member.id}`)
+      .send({ teamId: "missing" });
 
     expect(res.status).toBe(404);
-    expect(res.body.error.message).toBe("Team not found");
+  });
+
+  // Regression: an empty teamId used to skip the team check and hit the FK -> 409.
+  it("PATCH rejects empty teamId with 400 and a ZodIssue[] at path [teamId]", async () => {
+    const member = await createMember();
+
+    const res = await request(createApp()).patch(`/members/${member.id}`).send({ teamId: "" });
+
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+    expect(res.body.error[0].path).toEqual(["teamId"]);
   });
 
   it("PATCH of a missing member is 404 'Member not found'", async () => {
@@ -217,30 +232,11 @@ describe("members: ordering, 404s, conflicts, strictness", () => {
     expect((await prisma.member.findUnique({ where: { id: member.id } }))?.teamId).toBe(target.id);
   });
 
-  it.each([
-    ["login with a double hyphen", { name: "X", githubLogin: "a--b" }],
-    ["login with a trailing hyphen", { name: "X", githubLogin: "x-" }],
-    ["login longer than 39 chars", { name: "X", githubLogin: "a".repeat(40) }],
-    ["blank name", { name: "   ", githubLogin: "x-user" }],
-    ["name longer than 100 chars", { name: "n".repeat(101), githubLogin: "x-user" }],
-    ["missing githubLogin", { name: "X" }],
-  ])("POST with %s is 400", async (_label, body) => {
-    const team = await createTeam();
+  it("DELETE deletes, then 404s", async () => {
+    const member = await createMember();
+    const app = createApp();
 
-    const res = await request(createApp()).post(`/teams/${team.id}/members`).send(body);
-
-    expect(res.status).toBe(400);
-    expect(Array.isArray(res.body.error)).toBe(true);
-  });
-
-  it("POST trims the name", async () => {
-    const team = await createTeam();
-
-    const res = await request(createApp())
-      .post(`/teams/${team.id}/members`)
-      .send({ name: "  Ada  ", githubLogin: "ada" });
-
-    expect(res.status).toBe(201);
-    expect(res.body.name).toBe("Ada");
+    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(204);
+    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(404);
   });
 });
