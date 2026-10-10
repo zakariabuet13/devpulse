@@ -38,6 +38,22 @@ export async function createRepository(
   });
 }
 
+export async function createPullRequest(
+  overrides: Partial<Prisma.PullRequestUncheckedCreateInput> = {},
+) {
+  const n = next();
+  return prisma.pullRequest.create({
+    data: {
+      number: n,
+      title: `PR ${n}`,
+      state: "OPEN",
+      author: "author",
+      ...overrides,
+      repositoryId: overrides.repositoryId ?? (await createRepository()).id,
+    },
+  });
+}
+
 export async function createIssue(overrides: Partial<Prisma.IssueUncheckedCreateInput> = {}) {
   const n = next();
   return prisma.issue.create({
