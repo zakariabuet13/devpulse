@@ -1,6 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
+import { prisma } from "../src/db";
 import { createIssue, createRepository } from "./factories";
 
 describe("GET /repositories/:id/issues", () => {
@@ -109,5 +110,162 @@ describe("/issues/:id", () => {
     const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
 
     expect(res.status).toBe(400);
+  });
+
+  it("PATCH with a valid priority plus another key is rejected and nothing changes", async () => {
+    const issue = await createIssue({ priority: "HIGH", title: "before" });
+
+    const res = await request(createApp())
+      .patch(`/issues/${issue.id}`)
+      .send({ priority: "LOW", title: "x" });
+
+    expect(res.status).toBe(400);
+    const row = await prisma.issue.findUnique({ where: { id: issue.id } });
+    expect(row).toMatchObject({ priority: "HIGH", title: "before" });
+  });
+
+  it.each([
+    ["empty body", {}],
+    ["labels", { labels: ["x"] }],
+    ["state", { state: "CLOSED" }],
+    ["aiSummary", { aiSummary: "x" }],
+  ])("PATCH with %s is 400", async (_label, body) => {
+    const issue = await createIssue();
+
+    const res = await request(createApp()).patch(`/issues/${issue.id}`).send(body);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("PATCH persists the priority", async () => {
+    const issue = await createIssue({ priority: "HIGH" });
+
+    await request(createApp()).patch(`/issues/${issue.id}`).send({ priority: "URGENT" });
+
+    expect((await prisma.issue.findUnique({ where: { id: issue.id } }))?.priority).toBe("URGENT");
+  });
+
+  it("GET / PATCH of a missing issue is 404 'Issue not found'", async () => {
+    const app = createApp();
+
+    const get = await request(app).get("/issues/nope");
+    const patch = await request(app).patch("/issues/nope").send({ priority: "LOW" });
+
+    for (const res of [get, patch]) {
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatchObject({ code: "NOT_FOUND", message: "Issue not found" });
+    }
+  });
+
+  it.each(["post", "delete"] as const)("%s /issues has no route (404)", async (method) => {
+    const issue = await createIssue();
+    const app = createApp();
+
+    expect((await request(app)[method]("/issues")).status).toBe(404);
+    expect((await request(app)[method](`/issues/${issue.id}`)).status).toBe(404);
+  });
+});
+
+describe("issue list: scoping, ordering, paging, validation", () => {
+  const d = (day: string) => new Date(`2024-01-${day}T00:00:00Z`);
+
+  it("only returns the requested repository's issues", async () => {
+    const repo = await createRepository();
+    await createIssue({ repositoryId: repo.id });
+    await createIssue(); // other repository
+
+    const res = await request(createApp()).get(`/repositories/${repo.id}/issues`);
+
+    expect(res.body.total).toBe(1);
+    expect(res.body.items[0].repositoryId).toBe(repo.id);
+  });
+
+  it("filters only within the requested repository", async () => {
+    const repo = await createRepository();
+    await createIssue({ repositoryId: repo.id, state: "OPEN", labels: ["bug"], priority: "HIGH" });
+    const other = await createRepository();
+    await createIssue({ repositoryId: other.id, state: "OPEN", labels: ["bug"], priority: "HIGH" });
+
+    const res = await request(createApp()).get(
+      `/repositories/${repo.id}/issues?state=OPEN&label=bug&priority=HIGH`,
+    );
+
+    expect(res.body.total).toBe(1);
+  });
+
+  it("accepts multiple states", async () => {
+    const repo = await createRepository();
+    await createIssue({ repositoryId: repo.id, state: "OPEN" });
+    await createIssue({ repositoryId: repo.id, state: "CLOSED" });
+
+    const res = await request(createApp()).get(
+      `/repositories/${repo.id}/issues?state=OPEN,CLOSED`,
+    );
+
+    expect(res.body.total).toBe(2);
+  });
+
+  it("defaults to githubCreatedAt descending and supports every sort/order", async () => {
+    const repo = await createRepository();
+    await createIssue({ repositoryId: repo.id, number: 1, githubCreatedAt: d("02"), priority: "LOW" });
+    await createIssue({ repositoryId: repo.id, number: 2, githubCreatedAt: d("03"), priority: "URGENT" });
+    await createIssue({ repositoryId: repo.id, number: 3, githubCreatedAt: d("01"), priority: "MEDIUM" });
+    const app = createApp();
+    const numbers = async (qs: string) =>
+      (await request(app).get(`/repositories/${repo.id}/issues${qs}`)).body.items.map(
+        (i: { number: number }) => i.number,
+      );
+
+    expect(await numbers("")).toEqual([2, 1, 3]);
+    expect(await numbers("?sort=githubCreatedAt&order=asc")).toEqual([3, 1, 2]);
+    expect(await numbers("?sort=number&order=asc")).toEqual([1, 2, 3]);
+    expect(await numbers("?sort=number")).toEqual([3, 2, 1]);
+    expect(await numbers("?sort=priority&order=asc")).toEqual([1, 3, 2]);
+    expect(await numbers("?sort=priority&order=desc")).toEqual([2, 3, 1]);
+  });
+
+  it("pages through rows with tied sort keys without gaps or repeats", async () => {
+    const repo = await createRepository();
+    const same = d("01");
+    for (let i = 1; i <= 5; i++) {
+      await createIssue({ repositoryId: repo.id, number: i, githubCreatedAt: same });
+    }
+    const app = createApp();
+
+    const ids: string[] = [];
+    for (const offset of [0, 2, 4]) {
+      const res = await request(app).get(`/repositories/${repo.id}/issues?limit=2&offset=${offset}`);
+      expect(res.body.total).toBe(5);
+      ids.push(...res.body.items.map((i: { id: string }) => i.id));
+    }
+
+    expect(ids).toHaveLength(5);
+    expect(new Set(ids).size).toBe(5);
+    expect(ids).toEqual([...ids].sort());
+  });
+
+  it.each([
+    ["sort=bogus"],
+    ["order=sideways"],
+    ["priority=NOPE"],
+    ["priority=HIGH,NOPE"],
+    ["state="],
+    ["state=OPEN,BOGUS"],
+    ["limit=0"],
+    ["limit=101"],
+    ["offset=-1"],
+  ])("rejects ?%s with a ZodIssue[] body", async (qs) => {
+    const repo = await createRepository();
+
+    const res = await request(createApp()).get(`/repositories/${repo.id}/issues?${qs}`);
+
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+  });
+
+  it("404s for a missing repository with 'Repository not found'", async () => {
+    const res = await request(createApp()).get("/repositories/nope/issues");
+
+    expect(res.body.error.message).toBe("Repository not found");
   });
 });
