@@ -7,7 +7,7 @@ import {
 import { prisma } from "../db";
 import { toMemberDto } from "../dto";
 import { NotFoundError, parseInput } from "../errors";
-import { assertLoginFree, ensureTeam, rethrowMissing } from "../lib/guards";
+import { ensureTeam, rethrowMissing } from "../lib/guards";
 import { page, pageArgs } from "../lib/pagination";
 
 export const membersRouter = Router();
@@ -30,7 +30,6 @@ membersRouter.get("/teams/:teamId/members", async (req, res) => {
 membersRouter.post("/teams/:teamId/members", async (req, res) => {
   const data = parseInput(createMemberSchema, req.body);
   await ensureTeam(req.params.teamId);
-  await assertLoginFree(data.githubLogin);
   const member = await prisma.member.create({
     data: { ...data, teamId: req.params.teamId },
   });
@@ -49,7 +48,6 @@ membersRouter.patch("/members/:id", async (req, res) => {
   const existing = await prisma.member.findUnique({ where: { id }, select: { id: true } });
   if (!existing) throw new NotFoundError("Member not found");
   if (data.teamId) await ensureTeam(data.teamId);
-  if (data.githubLogin) await assertLoginFree(data.githubLogin, id);
   try {
     const member = await prisma.member.update({ where: { id }, data });
     res.json(toMemberDto(member));

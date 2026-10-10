@@ -37,7 +37,7 @@ model Team {
 model Member {
   id          String @id @default(uuid())
   name        String
-  githubLogin String @unique
+  githubLogin String @unique @db.Citext
   teamId      String
   team        Team   @relation(fields: [teamId], references: [id], onDelete: Restrict)
 
@@ -46,8 +46,8 @@ model Member {
 
 model Repository {
   id             String        @id @default(uuid())
-  githubFullName String        @unique
-  teamId         String
+  githubFullName String        @unique @db.Citext
+  teamId        String
   team           Team          @relation(fields: [teamId], references: [id], onDelete: Restrict)
   issues         Issue[]
   pullRequests   PullRequest[]

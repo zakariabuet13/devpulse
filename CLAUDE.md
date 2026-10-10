@@ -6,7 +6,7 @@ Run from repo root:
 - Single workspace: `npm run dev -w apps/api`, `npm run typecheck -w apps/web`, etc.
 - `npm run db:seed -w apps/api` - deletes PRs, issues, repos, members, teams in that order (team FKs are Restrict, no cascade), then re-creates the sample data
 - `npm run db:reset -w apps/api` - wipes the DB, re-runs migrations and seed
-- `BASE_URL=http://localhost:4100 MODE=dev npm run smoke -w apps/api` - curl smoke test against a running api (`MODE=prod` if started with `NODE_ENV=production`); reseeds first
+- `npm test -w apps/api` - Vitest + supertest on `createApp()` against real Postgres `devpulse_test` (globalSetup creates + `migrate deploy`s it; needs `docker compose up -d`); all tables truncated before each test; files run serially. Factories in `apps/api/test/factories.ts`.
 - `docker compose up -d` - starts the Postgres DB in docker
 - api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`)
 
@@ -30,7 +30,7 @@ Run from repo root:
 - api `lint` is just `tsc --noEmit` (no ESLint there); only web has ESLint.
 - Postgres runs on 5435, not the default 5432
 - api input (body, query) must go through `parseInput`; a raw `ZodError` reaching the error handler is a server bug -> 500. Never mutate `req.query` (Express 5 getter).
-- Case-insensitive uniqueness of `githubLogin` / `githubFullName` is app-level (`lib/guards.ts`); known race gap for differing-case concurrent writes.
+- Case-insensitive uniqueness of `githubLogin` / `githubFullName` is enforced by the DB: both columns are `@db.Citext` (migration `citext_github_names` creates the extension), so the `@unique` index is case-insensitive and violations surface as P2002 -> 409. No app-level pre-check; stored casing is kept as given.
 - Prisma unique violations under adapter-pg expose the constraint at `meta.driverAdapterError.cause.constraint.index` (no `meta.target`).
 
 ## Workflow

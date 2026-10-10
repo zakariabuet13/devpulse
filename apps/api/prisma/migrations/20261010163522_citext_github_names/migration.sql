@@ -1,0 +1,7 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
+-- AlterTable
+ALTER TABLE "Member" ALTER COLUMN "githubLogin" SET DATA TYPE CITEXT;
+
+-- AlterTable
+ALTER TABLE "Repository" ALTER COLUMN "githubFullName" SET DATA TYPE CITEXT;

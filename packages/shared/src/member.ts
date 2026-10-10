@@ -26,7 +26,7 @@ export const updateMemberSchema = z
   .object({
     name: memberName.optional(),
     githubLogin: githubLogin.optional(),
-    teamId: z.string().optional(),
+    teamId: z.string().min(1).optional(),
   })
   .strict()
   .refine(atLeastOneKey, atLeastOneKeyMessage);
