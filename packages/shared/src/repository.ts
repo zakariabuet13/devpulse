@@ -23,7 +23,7 @@ export type CreateRepository = z.infer<typeof createRepositorySchema>;
 export const updateRepositorySchema = z
   .object({
     githubFullName: githubFullName.optional(),
-    teamId: z.string().optional(),
+    teamId: z.string().min(1).optional(),
   })
   .strict()
   .refine(atLeastOneKey, atLeastOneKeyMessage);

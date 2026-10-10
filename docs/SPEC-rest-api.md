@@ -103,9 +103,9 @@ function mapPrismaError(e: unknown): AppError | undefined
 - Unique-violation messages are fixed per constraint/field: `"githubLogin already exists"`, `"githubFullName already exists"`. Verify what `meta` the adapter-pg error exposes (may be `meta.driverAdapterError.cause.constraint`/fields, not `meta.target`) and map by that; unknown constraint -> `"Resource already exists"`.
 - `ZodError` that reaches the error handler directly is NOT validation -> 500.
 
-### 5.3 Case-insensitive uniqueness (app level, no raw index)
+### 5.3 Case-insensitive uniqueness (DB level, citext)
 
-On POST/PATCH of member `githubLogin` and repo `githubFullName`: `findFirst({ where: { <field>: { equals: v, mode: "insensitive" }, NOT: { id: self } } })` -> `ConflictError("<field> already exists")`. Exact duplicates still hit the `@unique` (P2002 -> same message). Stored casing kept as given. Race between check and insert is accepted and documented as a known gap (exact-case races are caught by the DB).
+Member `githubLogin` and repo `githubFullName` are `@db.Citext` (migration `citext_github_names`, which runs `CREATE EXTENSION IF NOT EXISTS citext;`). The existing `@unique` index is therefore case-insensitive, and any duplicate (any casing) on POST/PATCH raises P2002, mapped to `"<field> already exists"` (409). No app-level pre-check, so no race gap. Stored casing kept as given. `_`/`%` are literal (no ILIKE wildcard issue).
 
 ### 5.4 Team delete and moves
 
@@ -152,7 +152,7 @@ Modified:
 - `CLAUDE.md` (repo root):
   - Architecture: replace "Keep this shape for all endpoints" with the error contract from 5.1 (validation stays array; others string in prod / envelope in dev).
   - Commands: `db:seed` no longer relies on cascade (ordered deletes); mention `smoke`.
-  - Gotcha: input parsing must go through `parseInput`; raw `ZodError` = 500; case-insensitive uniqueness is app-level.
+  - Gotcha: input parsing must go through `parseInput`; raw `ZodError` = 500; case-insensitive uniqueness is DB-level (citext).
   - Add env vars `WEB_ORIGIN`, `LOG_LEVEL`.
 
 Unchanged: `apps/web` (never imports api), `src/db.ts`, generated Prisma client (regenerate via `npm run db:generate -w apps/api`; `src/generated` is output).
@@ -162,7 +162,7 @@ Unchanged: `apps/web` (never imports api), `src/db.ts`, generated Prisma client 
 - Auth, rate limiting, multi-tenancy.
 - Creating/deleting issues or PRs; editing GitHub-owned fields; `aiSummary` writes; GitHub sync job.
 - Cursor pagination, counts/aggregates (`_count`), team-wide issue/PR endpoints (`/teams/:id/issues`).
-- Raw DB case-insensitive unique indexes, lowercase normalization.
+- Lowercase normalization of stored values.
 - Test framework (Vitest/supertest); smoke script is the only automated check.
 - Automated coverage of the 500 path (needs fault injection); verify manually if desired.
 - OpenAPI docs, request-size tuning, soft deletes, web dashboard work, Next.js proxy.

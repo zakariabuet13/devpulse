@@ -31,7 +31,7 @@ Run from repo root:
 - api `lint` is just `tsc --noEmit` (no ESLint there); only web has ESLint.
 - Postgres runs on 5435, not the default 5432
 - api input (body, query) must go through `parseInput`; a raw `ZodError` reaching the error handler is a server bug -> 500. Never mutate `req.query` (Express 5 getter).
-- Case-insensitive uniqueness of `githubLogin` / `githubFullName` is app-level (`lib/guards.ts`); known race gap for differing-case concurrent writes.
+- Case-insensitive uniqueness of `githubLogin` / `githubFullName` is enforced by the DB: both columns are `@db.Citext` (migration `citext_github_names` creates the extension), so the `@unique` index is case-insensitive and violations surface as P2002 -> 409. No app-level pre-check; stored casing is kept as given.
 - Prisma unique violations under adapter-pg expose the constraint at `meta.driverAdapterError.cause.constraint.index` (no `meta.target`).
 
 ## Workflow

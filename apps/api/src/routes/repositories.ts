@@ -7,7 +7,7 @@ import {
 import { prisma } from "../db";
 import { toRepositoryDto } from "../dto";
 import { NotFoundError, parseInput } from "../errors";
-import { assertFullNameFree, ensureTeam, rethrowMissing } from "../lib/guards";
+import { ensureTeam, rethrowMissing } from "../lib/guards";
 import { page, pageArgs } from "../lib/pagination";
 
 export const repositoriesRouter = Router();
@@ -30,7 +30,6 @@ repositoriesRouter.get("/teams/:teamId/repositories", async (req, res) => {
 repositoriesRouter.post("/teams/:teamId/repositories", async (req, res) => {
   const data = parseInput(createRepositorySchema, req.body);
   await ensureTeam(req.params.teamId);
-  await assertFullNameFree(data.githubFullName);
   const repo = await prisma.repository.create({
     data: { ...data, teamId: req.params.teamId },
   });
@@ -49,7 +48,6 @@ repositoriesRouter.patch("/repositories/:id", async (req, res) => {
   const existing = await prisma.repository.findUnique({ where: { id }, select: { id: true } });
   if (!existing) throw new NotFoundError("Repository not found");
   if (data.teamId) await ensureTeam(data.teamId);
-  if (data.githubFullName) await assertFullNameFree(data.githubFullName, id);
   try {
     // Issues/PRs follow the repository via their repositoryId FK; nothing else to update.
     const repo = await prisma.repository.update({ where: { id }, data });
