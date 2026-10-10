@@ -7,6 +7,7 @@ Run from repo root:
 - `npm run db:seed -w apps/api` - deletes PRs, issues, repos, members, teams in that order (team FKs are Restrict, no cascade), then re-creates the sample data
 - `npm run db:reset -w apps/api` - wipes the DB, re-runs migrations and seed
 - `BASE_URL=http://localhost:4100 MODE=dev npm run smoke -w apps/api` - curl smoke test against a running api (`MODE=prod` if started with `NODE_ENV=production`); reseeds first
+- `npm test -w apps/api` - Vitest + supertest on `createApp()` against real Postgres `devpulse_test` (globalSetup creates + `migrate deploy`s it; needs `docker compose up -d`); all tables truncated before each test; files run serially. Factories in `apps/api/test/factories.ts`.
 - `docker compose up -d` - starts the Postgres DB in docker
 - api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`)
 
