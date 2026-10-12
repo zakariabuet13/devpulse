@@ -19,7 +19,7 @@
             "Read(.env)",
             "Read(.env.*)",
             "Read(!.env.example)",
-            "Bash(npm run db:reset)"
+            "Bash(npm run db:reset *)"
         ]
     }
 }
