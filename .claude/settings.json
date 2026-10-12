@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "permissions": {
+        "allow": [
+            "Bash(npm test -w apps/api *)",
+            "Bash(npm run typecheck)",
+            "Bash(npm run lint)",
+            "Bash(npm view *)",
+            "mcp__claude-in-chrome__read_console_messages",
+            "mcp__claude-in-chrome__tabs_context_mcp",
+            "mcp__claude-in-chrome__find"
+        ],
+        "ask": [
+            "Bash(git push *)",
+            "Bash(gh pr merge *)",
+            "Bash(docker compose down *)"
+        ],
+        "deny": [
+            "Read(.env)",
+            "Read(.env.*)",
+            "Read(!.env.example)",
+            "Bash(npm run db:reset)"
+        ]
+    }
+}
