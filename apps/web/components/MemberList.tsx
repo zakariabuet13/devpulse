@@ -23,7 +23,11 @@ export function MemberList({ members, teams }: Props) {
 
   function move(id: string, teamId: string) {
     if (!teamId) return;
-    setErrors(({ [id]: _cleared, ...rest }) => rest);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     setPending(id, true);
     startTransition(async () => {
       const result = await moveMember(id, teamId);

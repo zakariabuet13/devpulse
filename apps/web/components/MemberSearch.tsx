@@ -13,13 +13,26 @@ export function MemberSearch() {
   const searchParams = useSearchParams();
   const urlQuery = searchParams.get("q") ?? "";
   const [value, setValue] = useState(urlQuery);
+  // A `q` change this component didn't write (nav link, Back) replaces the input; the echo of
+  // its own write doesn't, so keystrokes typed while that navigation lands are kept.
+  const [written, setWritten] = useState(urlQuery);
+  const [seenQuery, setSeenQuery] = useState(urlQuery);
+  if (urlQuery !== seenQuery) {
+    setSeenQuery(urlQuery);
+    if (urlQuery !== written) {
+      setValue(urlQuery);
+      setWritten(urlQuery);
+    }
+  }
 
   useEffect(() => {
     if (value.trim() === urlQuery.trim()) return;
     const timer = setTimeout(() => {
+      const next = value.trim();
       const params = new URLSearchParams(searchParams);
-      if (value.trim()) params.set("q", value.trim());
+      if (next) params.set("q", next);
       else params.delete("q");
+      setWritten(next);
       router.replace(`${pathname}?${params}`);
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
