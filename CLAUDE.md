@@ -13,10 +13,6 @@ Run from repo root:
 ## Architecture
 
 - `apps/api`: Request bodies are validated with zod schemas from `packages/shared`.
-  - Error contract (`src/middleware/errorHandler.ts`, `src/errors.ts`): handlers throw, Express 5 forwards async rejections.
-    - Validation: `400 { error: ZodIssue[] }` in every env.
-    - Everything else: prod `{ error: "<message>" }`; dev `{ error: { code, message, stack } }` (`NODE_ENV`). Codes: `BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, `INTERNAL` (500 message is always "Internal server error").
-    - Web must handle `error` as array | string | object (`apiErrorSchema` in shared).
   - Lists return `Page<T>` (`{ items, total, limit, offset }`), pagination via `limit`/`offset` query.
 - `apps/web`: Never imports from `apps/api`; shared code goes in packages/shared.
 - `packages/shared`: Ships **TypeScript source, no build step** (`main`/`exports` → `src/index.ts`). Consumers must transpile it:
@@ -26,12 +22,8 @@ Run from repo root:
 
 ## Gotchas
 
-- Web `typecheck` is `next typegen && tsc --noEmit`: Next 16 generates global types (e.g. `LayoutProps`) that plain `tsc` can't see.
-- api `lint` is just `tsc --noEmit` (no ESLint there); only web has ESLint.
 - Postgres runs on 5435, not the default 5432
-- api input (body, query) must go through `parseInput`; a raw `ZodError` reaching the error handler is a server bug -> 500. Never mutate `req.query` (Express 5 getter).
 - Case-insensitive uniqueness of `githubLogin` / `githubFullName` is enforced by the DB: both columns are `@db.Citext` (migration `citext_github_names` creates the extension), so the `@unique` index is case-insensitive and violations surface as P2002 -> 409. No app-level pre-check; stored casing is kept as given.
-- Prisma unique violations under adapter-pg expose the constraint at `meta.driverAdapterError.cause.constraint.index` (no `meta.target`).
 - Claude can't read `.env` (team settings deny it): add new env vars to `apps/api/.env.example` and ask the user to copy them into `.env`.
 
 ## Workflow
