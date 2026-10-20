@@ -36,6 +36,6 @@ Run from repo root:
 
 ## Git
 
-- branches `feat/<slug>` or `fix/<slug>`
+- branches `feat/<slug>`, `fix/<slug>`, or `chore/<slug>`
 - open PRs against `main`
 - squash-merge
