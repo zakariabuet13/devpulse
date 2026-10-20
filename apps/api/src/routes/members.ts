@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   createMemberSchema,
-  paginationQuerySchema,
+  memberListQuerySchema,
   updateMemberSchema,
 } from "@devpulse/shared";
 import { prisma } from "../db";
@@ -9,12 +9,25 @@ import { toMemberDto } from "../dto";
 import { NotFoundError, parseInput } from "../errors";
 import { ensureTeam, rethrowMissing } from "../lib/guards";
 import { page, pageArgs } from "../lib/pagination";
+import type { Prisma } from "../generated/prisma/client.js";
 
 export const membersRouter = Router();
 
+// Prisma's `contains` does not escape LIKE wildcards; Postgres' default escape char is `\`.
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
+
 membersRouter.get("/teams/:teamId/members", async (req, res) => {
-  const query = parseInput(paginationQuerySchema, req.query);
-  const where = { teamId: req.params.teamId };
+  const query = parseInput(memberListQuerySchema, req.query);
+  const q = query.q && escapeLike(query.q);
+  const where: Prisma.MemberWhereInput = {
+    teamId: req.params.teamId,
+    ...(q && {
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { githubLogin: { contains: q, mode: "insensitive" } },
+      ],
+    }),
+  };
   await ensureTeam(req.params.teamId);
   const [rows, total] = await Promise.all([
     prisma.member.findMany({
