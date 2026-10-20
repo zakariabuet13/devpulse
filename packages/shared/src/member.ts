@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { atLeastOneKey, atLeastOneKeyMessage, paginated } from "./common";
+import {
+  atLeastOneKey,
+  atLeastOneKeyMessage,
+  paginated,
+  paginationQuerySchema,
+} from "./common";
 
 const memberName = z.string().trim().min(1).max(100);
 
@@ -32,5 +37,12 @@ export const updateMemberSchema = z
   .refine(atLeastOneKey, atLeastOneKeyMessage);
 
 export type UpdateMember = z.infer<typeof updateMemberSchema>;
+
+// Blank/whitespace `q` is trimmed to "" and treated as no filter by the route.
+export const memberListQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().optional(),
+});
+
+export type MemberListQuery = z.infer<typeof memberListQuerySchema>;
 
 export const memberPageSchema = paginated(memberSchema);

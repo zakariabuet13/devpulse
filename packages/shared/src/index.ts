@@ -28,9 +28,15 @@ export {
   memberSchema,
   createMemberSchema,
   updateMemberSchema,
+  memberListQuerySchema,
   memberPageSchema,
 } from "./member";
-export type { Member, CreateMember, UpdateMember } from "./member";
+export type {
+  Member,
+  CreateMember,
+  UpdateMember,
+  MemberListQuery,
+} from "./member";
 
 export {
   repositorySchema,

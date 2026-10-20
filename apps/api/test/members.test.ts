@@ -39,6 +39,92 @@ describe("GET /teams/:teamId/members", () => {
       "Charlie",
     ]);
   });
+
+  describe("q search", () => {
+    const search = (teamId: string, q: string) =>
+      request(createApp()).get(`/teams/${teamId}/members`).query({ q });
+    const logins = (res: request.Response) =>
+      res.body.items.map((m: { githubLogin: string }) => m.githubLogin);
+
+    it("matches name case-insensitively, as a substring", async () => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id, name: "Grace Hopper", githubLogin: "gh1" });
+      await createMember({ teamId: team.id, name: "Alan Turing", githubLogin: "at1" });
+
+      const res = await search(team.id, "ACE HOP");
+
+      expect(res.status).toBe(200);
+      expect(logins(res)).toEqual(["gh1"]);
+      expect(res.body.total).toBe(1);
+    });
+
+    it("matches githubLogin case-insensitively, as a substring", async () => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id, name: "One", githubLogin: "Ada-Lovelace" });
+      await createMember({ teamId: team.id, name: "Two", githubLogin: "other" });
+
+      const res = await search(team.id, "LOVE");
+
+      expect(logins(res)).toEqual(["Ada-Lovelace"]);
+    });
+
+    it("only searches within the requested team", async () => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id, name: "Zed", githubLogin: "zed-in" });
+      await createMember({ name: "Zed", githubLogin: "zed-out" });
+
+      const res = await search(team.id, "zed");
+
+      expect(logins(res)).toEqual(["zed-in"]);
+    });
+
+    it("returns an empty page when nothing matches", async () => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id });
+
+      const res = await search(team.id, "no-such-person");
+
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([]);
+      expect(res.body.total).toBe(0);
+    });
+
+    it.each(["", "   "])("treats blank q %j as no filter", async (q) => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id });
+      await createMember({ teamId: team.id });
+
+      const res = await search(team.id, q);
+
+      expect(res.body.total).toBe(2);
+    });
+
+    it("treats % and _ literally", async () => {
+      const team = await createTeam();
+      await createMember({ teamId: team.id, name: "100% Real", githubLogin: "real" });
+      await createMember({ teamId: team.id, name: "Plain", githubLogin: "plain" });
+
+      expect(logins(await search(team.id, "%"))).toEqual(["real"]);
+      expect(logins(await search(team.id, "_"))).toEqual([]);
+      expect(logins(await search(team.id, "\\"))).toEqual([]);
+    });
+
+    it("applies pagination to the filtered set", async () => {
+      const team = await createTeam();
+      for (const name of ["Dev A", "Dev B", "Dev C", "Other"]) {
+        await createMember({ teamId: team.id, name });
+      }
+
+      const res = await request(createApp())
+        .get(`/teams/${team.id}/members`)
+        .query({ q: "dev", limit: 2, offset: 1 });
+
+      expect(res.body.total).toBe(3);
+      expect(res.body.items.map((m: { name: string }) => m.name)).toEqual(["Dev B", "Dev C"]);
+      expect(res.body.limit).toBe(2);
+      expect(res.body.offset).toBe(1);
+    });
+  });
 });
 
 describe("POST /teams/:teamId/members", () => {
