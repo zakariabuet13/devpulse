@@ -1,6 +1,6 @@
 ---
 name: api-conventions
-description: "API conventions: Used as conventions when creating or updating API related codes "
+description: "How a DevPulse endpoint is built (router, shared schema, DTO/Page, tests). Use when planning, adding or changing anything in apps/api or packages/shared."
 user-invocable: false
 ---
 
