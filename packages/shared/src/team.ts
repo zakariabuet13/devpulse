@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { atLeastOneKey, atLeastOneKeyMessage, paginated } from "./common";
+import { prioritySchema } from "./issue";
 
 const teamName = z.string().trim().min(1).max(100);
 
@@ -25,3 +26,13 @@ export const teamSchema = z.object({
 export type Team = z.infer<typeof teamSchema>;
 
 export const teamPageSchema = paginated(teamSchema);
+
+// Every priority key is always present (0 when none match).
+// `z.record(enum, ...)` is exhaustive in zod 4: all enum keys are required.
+export const teamStatsSchema = z.object({
+  openIssuesByPriority: z.record(prioritySchema, z.number().int()),
+  openPullRequests: z.number().int(),
+  mergedLast7Days: z.number().int(),
+});
+
+export type TeamStats = z.infer<typeof teamStatsSchema>;
