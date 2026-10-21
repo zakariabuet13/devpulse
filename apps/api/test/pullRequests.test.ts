@@ -1,7 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
-import { createPullRequest, createRepository } from "./factories";
+import { createPullRequest, createRepository, createTeam } from "./factories";
 
 describe("GET /repositories/:id/pull-requests", () => {
   it("lists the repository's pull requests", async () => {
@@ -106,6 +106,110 @@ describe("GET /repositories/:id/pull-requests", () => {
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toBe("Repository not found");
+  });
+});
+
+describe("GET /teams/:teamId/pull-requests", () => {
+  const d = (day: string) => new Date(`2024-01-${day}T00:00:00Z`);
+
+  // Two repos on one team; numbers are unique across them so sort assertions are unambiguous.
+  async function seedTeam() {
+    const team = await createTeam();
+    const repoA = await createRepository({ teamId: team.id });
+    const repoB = await createRepository({ teamId: team.id });
+    await createPullRequest({ repositoryId: repoA.id, number: 1, state: "MERGED", mergedAt: d("03"), reviewRequestedAt: null });
+    await createPullRequest({ repositoryId: repoB.id, number: 2, state: "OPEN", mergedAt: null, reviewRequestedAt: d("01") });
+    await createPullRequest({ repositoryId: repoA.id, number: 3, state: "MERGED", mergedAt: d("01"), reviewRequestedAt: d("02") });
+    return team;
+  }
+
+  it("lists PRs across all of the team's repositories and excludes other teams", async () => {
+    const team = await seedTeam();
+    await createPullRequest(); // other team
+
+    const res = await request(createApp()).get(`/teams/${team.id}/pull-requests`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ total: 3, limit: expect.any(Number), offset: 0 });
+    expect(res.body.items).toHaveLength(3);
+  });
+
+  it("returns an empty page for a team without repositories", async () => {
+    const team = await createTeam();
+
+    const res = await request(createApp()).get(`/teams/${team.id}/pull-requests`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+    expect(res.body.total).toBe(0);
+  });
+
+  it("filters by one or several states", async () => {
+    const team = await seedTeam();
+    const app = createApp();
+
+    const merged = await request(app).get(`/teams/${team.id}/pull-requests?state=MERGED`);
+    const mixed = await request(app).get(`/teams/${team.id}/pull-requests?state=OPEN,MERGED`);
+
+    expect(merged.body.total).toBe(2);
+    expect(merged.body.items.every((p: { state: string }) => p.state === "MERGED")).toBe(true);
+    expect(mixed.body.total).toBe(3);
+  });
+
+  it("defaults to number descending and supports every sort/order with nulls last", async () => {
+    const team = await seedTeam();
+    const app = createApp();
+    const numbers = async (qs: string) =>
+      (await request(app).get(`/teams/${team.id}/pull-requests${qs}`)).body.items.map(
+        (p: { number: number }) => p.number,
+      );
+
+    expect(await numbers("")).toEqual([3, 2, 1]);
+    expect(await numbers("?sort=number&order=asc")).toEqual([1, 2, 3]);
+    expect(await numbers("?sort=mergedAt&order=asc")).toEqual([3, 1, 2]);
+    expect(await numbers("?sort=mergedAt&order=desc")).toEqual([1, 3, 2]);
+    expect(await numbers("?sort=reviewRequestedAt&order=asc")).toEqual([2, 3, 1]);
+    expect(await numbers("?sort=reviewRequestedAt&order=desc")).toEqual([3, 2, 1]);
+  });
+
+  it("pages through rows with tied sort keys across repositories without gaps or repeats", async () => {
+    const team = await createTeam();
+    const repos = [await createRepository({ teamId: team.id }), await createRepository({ teamId: team.id })];
+    for (let i = 1; i <= 5; i++) {
+      await createPullRequest({ repositoryId: repos[i % 2].id, number: i, mergedAt: d("01") });
+    }
+    const app = createApp();
+
+    const ids: string[] = [];
+    for (const offset of [0, 2, 4]) {
+      const res = await request(app).get(
+        `/teams/${team.id}/pull-requests?sort=mergedAt&limit=2&offset=${offset}`,
+      );
+      expect(res.body.total).toBe(5);
+      ids.push(...res.body.items.map((p: { id: string }) => p.id));
+    }
+
+    expect(new Set(ids).size).toBe(5);
+    expect(ids).toEqual([...ids].sort());
+  });
+
+  it.each([["sort=bogus"], ["order=sideways"], ["state=BOGUS"], ["state="], ["limit=0"], ["offset=-1"]])(
+    "rejects ?%s with a ZodIssue[] body",
+    async (qs) => {
+      const team = await createTeam();
+
+      const res = await request(createApp()).get(`/teams/${team.id}/pull-requests?${qs}`);
+
+      expect(res.status).toBe(400);
+      expect(Array.isArray(res.body.error)).toBe(true);
+    },
+  );
+
+  it("404s for a missing team with 'Team not found'", async () => {
+    const res = await request(createApp()).get("/teams/nope/pull-requests");
+
+    expect(res.status).toBe(404);
+    expect(res.body.error.message).toBe("Team not found");
   });
 });
 

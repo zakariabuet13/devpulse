@@ -3,14 +3,18 @@ import {
   createTeamSchema,
   paginationQuerySchema,
   updateTeamSchema,
+  type TeamStats,
 } from "@devpulse/shared";
 import { prisma } from "../db";
 import { toTeamDto } from "../dto";
 import { ConflictError, NotFoundError, parseInput } from "../errors";
+import { ensureTeam } from "../lib/guards";
 import { page, pageArgs } from "../lib/pagination";
 import { Prisma } from "../generated/prisma/client.js";
 
 export const teamsRouter = Router();
+
+const MERGED_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 teamsRouter.get("/teams", async (req, res) => {
   const query = parseInput(paginationQuerySchema, req.query);
@@ -34,6 +38,33 @@ teamsRouter.get("/teams/:id", async (req, res) => {
   const team = await prisma.team.findUnique({ where: { id: req.params.id } });
   if (!team) throw new NotFoundError("Team not found");
   res.json(toTeamDto(team));
+});
+
+teamsRouter.get("/teams/:teamId/stats", async (req, res) => {
+  const { teamId } = req.params;
+  await ensureTeam(teamId);
+  const inTeam = { repository: { teamId } };
+  const since = new Date(Date.now() - MERGED_WINDOW_MS);
+
+  const [byPriority, openPullRequests, mergedLast7Days] = await Promise.all([
+    prisma.issue.groupBy({
+      by: ["priority"],
+      where: { ...inTeam, state: "OPEN" },
+      _count: { _all: true },
+    }),
+    prisma.pullRequest.count({ where: { ...inTeam, state: "OPEN" } }),
+    prisma.pullRequest.count({
+      where: { ...inTeam, state: "MERGED", mergedAt: { gte: since } },
+    }),
+  ]);
+
+  const stats: TeamStats = {
+    openIssuesByPriority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+    openPullRequests,
+    mergedLast7Days,
+  };
+  for (const row of byPriority) stats.openIssuesByPriority[row.priority] = row._count._all;
+  res.json(stats);
 });
 
 teamsRouter.patch("/teams/:id", async (req, res) => {

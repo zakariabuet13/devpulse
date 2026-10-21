@@ -21,8 +21,9 @@ export {
   updateTeamSchema,
   teamSchema,
   teamPageSchema,
+  teamStatsSchema,
 } from "./team";
-export type { CreateTeam, UpdateTeam, Team } from "./team";
+export type { CreateTeam, UpdateTeam, Team, TeamStats } from "./team";
 
 export {
   memberSchema,
