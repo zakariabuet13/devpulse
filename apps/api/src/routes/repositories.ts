@@ -37,7 +37,9 @@ repositoriesRouter.post("/teams/:teamId/repositories", async (req, res) => {
 });
 
 repositoriesRouter.get("/repositories/:id", async (req, res) => {
-  const repo = await prisma.repository.findUnique({ where: { id: req.params.id } });
+  const repo = await prisma.repository.findUnique({
+    where: { id: req.params.id },
+  });
   if (!repo) throw new NotFoundError("Repository not found");
   res.json(toRepositoryDto(repo));
 });
@@ -45,7 +47,10 @@ repositoriesRouter.get("/repositories/:id", async (req, res) => {
 repositoriesRouter.patch("/repositories/:id", async (req, res) => {
   const data = parseInput(updateRepositorySchema, req.body);
   const id = req.params.id;
-  const existing = await prisma.repository.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.repository.findUnique({
+    where: { id },
+    select: { id: true },
+  });
   if (!existing) throw new NotFoundError("Repository not found");
   if (data.teamId) await ensureTeam(data.teamId);
   try {

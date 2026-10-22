@@ -29,11 +29,17 @@ export const issueSchema = z.object({
 export type Issue = z.infer<typeof issueSchema>;
 
 // `priority` is the only issue field writable via the API.
-export const updateIssueSchema = z.object({ priority: prioritySchema }).strict();
+export const updateIssueSchema = z
+  .object({ priority: prioritySchema })
+  .strict();
 
 export type UpdateIssue = z.infer<typeof updateIssueSchema>;
 
-export const issueSortSchema = z.enum(["githubCreatedAt", "number", "priority"]);
+export const issueSortSchema = z.enum([
+  "githubCreatedAt",
+  "number",
+  "priority",
+]);
 
 export const issueListQuerySchema = paginationQuerySchema.extend({
   state: csvOf(issueStateSchema).optional(),

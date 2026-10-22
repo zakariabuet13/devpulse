@@ -43,7 +43,10 @@ issuesRouter.get("/issues/:id", async (req, res) => {
 issuesRouter.patch("/issues/:id", async (req, res) => {
   const data = parseInput(updateIssueSchema, req.body);
   try {
-    const issue = await prisma.issue.update({ where: { id: req.params.id }, data });
+    const issue = await prisma.issue.update({
+      where: { id: req.params.id },
+      data,
+    });
     res.json(toIssueDto(issue));
   } catch (e) {
     rethrowMissing(e, "Issue not found");

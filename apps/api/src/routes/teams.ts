@@ -63,17 +63,24 @@ teamsRouter.get("/teams/:teamId/stats", async (req, res) => {
     openPullRequests,
     mergedLast7Days,
   };
-  for (const row of byPriority) stats.openIssuesByPriority[row.priority] = row._count._all;
+  for (const row of byPriority)
+    stats.openIssuesByPriority[row.priority] = row._count._all;
   res.json(stats);
 });
 
 teamsRouter.patch("/teams/:id", async (req, res) => {
   const data = parseInput(updateTeamSchema, req.body);
   try {
-    const team = await prisma.team.update({ where: { id: req.params.id }, data });
+    const team = await prisma.team.update({
+      where: { id: req.params.id },
+      data,
+    });
     res.json(toTeamDto(team));
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2025"
+    ) {
       throw new NotFoundError("Team not found");
     }
     throw e;
@@ -86,7 +93,8 @@ teamsRouter.delete("/teams/:id", async (req, res) => {
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       if (e.code === "P2025") throw new NotFoundError("Team not found");
-      if (e.code === "P2003") throw new ConflictError("Team has members or repositories");
+      if (e.code === "P2003")
+        throw new ConflictError("Team has members or repositories");
     }
     throw e;
   }

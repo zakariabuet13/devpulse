@@ -1,7 +1,12 @@
 import type { Priority } from "@devpulse/shared";
 
 // 3 bars: LOW fills 1, MEDIUM 2, HIGH and URGENT all 3 (amber / red).
-const FILLED: Record<Priority, number> = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 3 };
+const FILLED: Record<Priority, number> = {
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  URGENT: 3,
+};
 const TONE: Record<Priority, string> = {
   LOW: "text-zinc-500",
   MEDIUM: "text-zinc-700",
@@ -9,7 +14,13 @@ const TONE: Record<Priority, string> = {
   URGENT: "text-red-600",
 };
 
-export function PriorityIcon({ priority, size = 14 }: { priority: Priority; size?: number }) {
+export function PriorityIcon({
+  priority,
+  size = 14,
+}: {
+  priority: Priority;
+  size?: number;
+}) {
   const filled = FILLED[priority];
   return (
     <svg

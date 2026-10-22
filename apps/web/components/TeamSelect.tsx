@@ -21,12 +21,18 @@ export function TeamSelect({ teams, selectedId }: Props) {
     <label className="relative flex h-[58px] w-[276px] items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 shadow-sm">
       <UsersIcon className="shrink-0 text-zinc-700" />
       <span className="flex flex-col">
-        <span className="font-mono text-[10px] uppercase leading-3 text-zinc-500">Team</span>
+        <span className="font-mono text-[10px] uppercase leading-3 text-zinc-500">
+          Team
+        </span>
         <span className="text-[15px] font-semibold text-zinc-900">
           {teams.find((t) => t.id === selectedId)?.name}
         </span>
       </span>
-      <ChevronDownIcon className="ml-auto text-zinc-700" width={16} height={16} />
+      <ChevronDownIcon
+        className="ml-auto text-zinc-700"
+        width={16}
+        height={16}
+      />
       <select
         aria-label="Team"
         value={selectedId}

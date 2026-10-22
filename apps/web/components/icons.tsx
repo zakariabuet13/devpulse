@@ -1,6 +1,9 @@
 import type { ReactNode, SVGProps } from "react";
 
-function Icon({ children, ...props }: SVGProps<SVGSVGElement> & { children: ReactNode }) {
+function Icon({
+  children,
+  ...props
+}: SVGProps<SVGSVGElement> & { children: ReactNode }) {
   return (
     <svg
       width="18"

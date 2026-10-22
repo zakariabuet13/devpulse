@@ -8,7 +8,9 @@ const TONE: Record<LabelTone, string> = {
 
 export function LabelChip({ label }: { label: string }) {
   return (
-    <span className={`rounded px-1.5 py-0.5 text-[10px] leading-3 ${TONE[labelTone(label)]}`}>
+    <span
+      className={`rounded px-1.5 py-0.5 text-[10px] leading-3 ${TONE[labelTone(label)]}`}
+    >
       {label}
     </span>
   );

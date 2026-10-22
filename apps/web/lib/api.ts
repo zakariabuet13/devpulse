@@ -8,7 +8,9 @@ function errorMessage(body: unknown, status: number): string {
   const error = (body as { error?: unknown } | null)?.error;
   if (typeof error === "string") return error;
   if (Array.isArray(error)) {
-    return error.map((i: { message?: string }) => i.message ?? "Invalid input").join("; ");
+    return error
+      .map((i: { message?: string }) => i.message ?? "Invalid input")
+      .join("; ");
   }
   if (error && typeof error === "object" && "message" in error) {
     return String((error as { message: unknown }).message);
@@ -33,7 +35,10 @@ async function request<T extends z.ZodType>(
   return schema.parse(body);
 }
 
-export function apiGet<T extends z.ZodType>(path: string, schema: T): Promise<z.output<T>> {
+export function apiGet<T extends z.ZodType>(
+  path: string,
+  schema: T,
+): Promise<z.output<T>> {
   return request(path, schema);
 }
 
@@ -58,7 +63,10 @@ export async function fetchAll<T extends z.ZodType>(
   const items: z.output<T>[] = [];
   let offset = 0;
   for (;;) {
-    const page = await apiGet(`${path}${sep}limit=100&offset=${offset}`, pageSchema);
+    const page = await apiGet(
+      `${path}${sep}limit=100&offset=${offset}`,
+      pageSchema,
+    );
     items.push(...page.items);
     offset += 100;
     if (offset >= page.total) return items;

@@ -13,7 +13,9 @@ export default async function setup(project: TestProject) {
   const url = new URL(databaseUrl);
   const dbName = url.pathname.slice(1);
   if (!dbName.endsWith("_test")) {
-    throw new Error(`Refusing to run tests against non-test database "${dbName}"`);
+    throw new Error(
+      `Refusing to run tests against non-test database "${dbName}"`,
+    );
   }
 
   // CREATE DATABASE can't target the DB we're connected to; use the maintenance DB.

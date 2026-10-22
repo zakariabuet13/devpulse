@@ -2,7 +2,12 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { prisma } from "../src/db";
-import { createIssue, createPullRequest, createRepository, createTeam } from "./factories";
+import {
+  createIssue,
+  createPullRequest,
+  createRepository,
+  createTeam,
+} from "./factories";
 
 describe("GET /teams/:teamId/repositories", () => {
   it("lists the team's repositories", async () => {
@@ -10,7 +15,9 @@ describe("GET /teams/:teamId/repositories", () => {
     await createRepository({ teamId: team.id, githubFullName: "devpulse/api" });
     await createRepository(); // other team
 
-    const res = await request(createApp()).get(`/teams/${team.id}/repositories`);
+    const res = await request(createApp()).get(
+      `/teams/${team.id}/repositories`,
+    );
 
     expect(res.status).toBe(200);
     expect(res.body.total).toBe(1);
@@ -29,13 +36,13 @@ describe("GET /teams/:teamId/repositories", () => {
       await createRepository({ teamId: team.id, githubFullName });
     }
 
-    const res = await request(createApp()).get(`/teams/${team.id}/repositories`);
+    const res = await request(createApp()).get(
+      `/teams/${team.id}/repositories`,
+    );
 
-    expect(res.body.items.map((r: { githubFullName: string }) => r.githubFullName)).toEqual([
-      "org/a",
-      "org/b",
-      "org/c",
-    ]);
+    expect(
+      res.body.items.map((r: { githubFullName: string }) => r.githubFullName),
+    ).toEqual(["org/a", "org/b", "org/c"]);
   });
 });
 
@@ -48,7 +55,10 @@ describe("POST /teams/:teamId/repositories", () => {
       .send({ githubFullName: "smoke/repo-one" });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ teamId: team.id, githubFullName: "smoke/repo-one" });
+    expect(res.body).toMatchObject({
+      teamId: team.id,
+      githubFullName: "smoke/repo-one",
+    });
   });
 
   it("rejects an invalid name with 400", async () => {
@@ -141,7 +151,9 @@ describe("/repositories/:id", () => {
     const issue = await createIssue({ repositoryId: repo.id });
     const app = createApp();
 
-    expect((await request(app).delete(`/repositories/${repo.id}`)).status).toBe(204);
+    expect((await request(app).delete(`/repositories/${repo.id}`)).status).toBe(
+      204,
+    );
     expect((await request(app).get(`/issues/${issue.id}`)).status).toBe(404);
   });
 
@@ -150,8 +162,12 @@ describe("/repositories/:id", () => {
     const pr = await createPullRequest({ repositoryId: repo.id });
     const app = createApp();
 
-    expect((await request(app).delete(`/repositories/${repo.id}`)).status).toBe(204);
-    expect((await request(app).get(`/pull-requests/${pr.id}`)).status).toBe(404);
+    expect((await request(app).delete(`/repositories/${repo.id}`)).status).toBe(
+      204,
+    );
+    expect((await request(app).get(`/pull-requests/${pr.id}`)).status).toBe(
+      404,
+    );
   });
 
   it("DELETE of a missing repository is 404", async () => {
@@ -174,7 +190,9 @@ describe("/repositories/:id", () => {
   it("PATCH of a missing repository is 404 'Repository not found'", async () => {
     const team = await createTeam();
 
-    const res = await request(createApp()).patch("/repositories/nope").send({ teamId: team.id });
+    const res = await request(createApp())
+      .patch("/repositories/nope")
+      .send({ teamId: team.id });
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toBe("Repository not found");
@@ -214,7 +232,9 @@ describe("/repositories/:id", () => {
   ])("PATCH with %s is 400 and changes nothing", async (_label, body) => {
     const repo = await createRepository({ githubFullName: "before/repo" });
 
-    const res = await request(createApp()).patch(`/repositories/${repo.id}`).send(body);
+    const res = await request(createApp())
+      .patch(`/repositories/${repo.id}`)
+      .send(body);
 
     expect(res.status).toBe(400);
     expect(Array.isArray(res.body.error)).toBe(true);
@@ -230,12 +250,18 @@ describe("/repositories/:id", () => {
     await createPullRequest({ repositoryId: repo.id });
     const app = createApp();
 
-    await request(app).patch(`/repositories/${repo.id}`).send({ teamId: target.id });
+    await request(app)
+      .patch(`/repositories/${repo.id}`)
+      .send({ teamId: target.id });
 
     const issues = await request(app).get(`/repositories/${repo.id}/issues`);
-    const prs = await request(app).get(`/repositories/${repo.id}/pull-requests`);
+    const prs = await request(app).get(
+      `/repositories/${repo.id}/pull-requests`,
+    );
     expect(issues.body.total).toBe(1);
     expect(prs.body.total).toBe(1);
-    expect((await request(app).get(`/teams/${target.id}/repositories`)).body.total).toBe(1);
+    expect(
+      (await request(app).get(`/teams/${target.id}/repositories`)).body.total,
+    ).toBe(1);
   });
 });

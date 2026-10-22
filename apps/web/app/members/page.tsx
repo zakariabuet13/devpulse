@@ -5,7 +5,9 @@ import { MembersSection, MembersSkeleton } from "@/components/MembersSection";
 import { TeamSelect } from "@/components/TeamSelect";
 import { fetchAll } from "@/lib/api";
 
-export default async function MembersPage({ searchParams }: PageProps<"/members">) {
+export default async function MembersPage({
+  searchParams,
+}: PageProps<"/members">) {
   const { team, q } = await searchParams;
   const teams = await fetchAll("/teams", teamSchema);
 
@@ -25,7 +27,9 @@ export default async function MembersPage({ searchParams }: PageProps<"/members"
     <div className="flex flex-col gap-8">
       <div className="-mb-[7px] flex items-start justify-between">
         <div>
-          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">Members</h1>
+          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">
+            Members
+          </h1>
           <p className="mt-1 text-[13px] text-zinc-600">
             Find people on a team and move them to another one.
           </p>

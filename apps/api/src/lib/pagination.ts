@@ -5,6 +5,10 @@ export function pageArgs({ limit, offset }: PaginationQuery) {
   return { skip: offset, take: limit };
 }
 
-export function page<T>(items: T[], total: number, { limit, offset }: PaginationQuery): Page<T> {
+export function page<T>(
+  items: T[],
+  total: number,
+  { limit, offset }: PaginationQuery,
+): Page<T> {
   return { items, total, limit, offset };
 }

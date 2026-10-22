@@ -20,15 +20,23 @@ export function IssueList({ issues, onPriorityChange }: Props) {
       <table className="w-full text-left">
         <thead>
           <tr className="bg-zinc-100 font-mono text-[10px] uppercase text-zinc-500">
-            <th className="h-10 w-[140px] rounded-tl-lg pl-6 font-normal">Priority</th>
+            <th className="h-10 w-[140px] rounded-tl-lg pl-6 font-normal">
+              Priority
+            </th>
             <th className="font-normal">Issue</th>
             <th className="w-[280px] font-normal">Labels</th>
-            <th className="w-[220px] rounded-tr-lg pr-6 font-normal">Repository</th>
+            <th className="w-[220px] rounded-tr-lg pr-6 font-normal">
+              Repository
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((i) => (
-            <tr key={i.id} data-issue-id={i.id} className="h-14 border-t border-zinc-200">
+            <tr
+              key={i.id}
+              data-issue-id={i.id}
+              className="h-14 border-t border-zinc-200"
+            >
               <td className="pl-6">
                 <span className="inline-block">
                   <PrioritySelect
@@ -39,8 +47,12 @@ export function IssueList({ issues, onPriorityChange }: Props) {
                 </span>
               </td>
               <td>
-                <span className="mr-2 font-mono text-[11px] text-zinc-500">#{i.number}</span>
-                <span className="text-[13px] font-medium text-zinc-900">{i.title}</span>
+                <span className="mr-2 font-mono text-[11px] text-zinc-500">
+                  #{i.number}
+                </span>
+                <span className="text-[13px] font-medium text-zinc-900">
+                  {i.title}
+                </span>
               </td>
               <td>
                 <span className="flex flex-wrap gap-1.5">

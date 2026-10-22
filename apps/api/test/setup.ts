@@ -4,7 +4,9 @@ import { prisma } from "../src/db";
 // Defense in depth: never TRUNCATE anything but a *_test database.
 const dbName = new URL(process.env.DATABASE_URL ?? "").pathname.slice(1);
 if (!dbName.endsWith("_test")) {
-  throw new Error(`Refusing to run tests against non-test database "${dbName}"`);
+  throw new Error(
+    `Refusing to run tests against non-test database "${dbName}"`,
+  );
 }
 
 beforeEach(async () => {

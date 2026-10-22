@@ -1,6 +1,11 @@
 import type { Issue, Priority } from "@devpulse/shared";
 
-export const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const satisfies readonly Priority[];
+export const PRIORITIES = [
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "URGENT",
+] as const satisfies readonly Priority[];
 
 export const PRIORITY_LABEL: Record<Priority, string> = {
   LOW: "Low",
@@ -14,7 +19,12 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
 export function groupByPriority<T extends Pick<Issue, "priority">>(
   issues: T[],
 ): Record<Priority, T[]> {
-  const out: Record<Priority, T[]> = { LOW: [], MEDIUM: [], HIGH: [], URGENT: [] };
+  const out: Record<Priority, T[]> = {
+    LOW: [],
+    MEDIUM: [],
+    HIGH: [],
+    URGENT: [],
+  };
   for (const issue of issues) out[issue.priority].push(issue);
   return out;
 }
@@ -28,13 +38,19 @@ type Filterable = Pick<Issue, "title" | "number" | "labels"> & {
 
 // Search is case-insensitive over title, `#number` and repo name; `repo` (full name) and
 // `label` are exact matches, and an empty string means "all".
-export function filterIssues<T extends Filterable>(issues: T[], filters: IssueFilters): T[] {
+export function filterIssues<T extends Filterable>(
+  issues: T[],
+  filters: IssueFilters,
+): T[] {
   const q = filters.query.trim().toLowerCase();
   return issues.filter(
     (i) =>
       (!filters.repo || i.repoFullName === filters.repo) &&
       (!filters.label || i.labels.includes(filters.label)) &&
-      (!q || [i.title, `#${i.number}`, i.repoName].some((s) => s.toLowerCase().includes(q))),
+      (!q ||
+        [i.title, `#${i.number}`, i.repoName].some((s) =>
+          s.toLowerCase().includes(q),
+        )),
   );
 }
 
@@ -56,9 +72,9 @@ export function collectLabels(issues: Pick<Issue, "labels">[]): string[] {
 export function collectRepos(
   issues: { repoName: string; repoFullName: string }[],
 ): [string, string][] {
-  return [...new Map(issues.map((i) => [i.repoFullName, i.repoName])).entries()].sort((a, b) =>
-    a[1].localeCompare(b[1]),
-  );
+  return [
+    ...new Map(issues.map((i) => [i.repoFullName, i.repoName])).entries(),
+  ].sort((a, b) => a[1].localeCompare(b[1]));
 }
 
 export type LabelTone = "amber" | "red" | "neutral";

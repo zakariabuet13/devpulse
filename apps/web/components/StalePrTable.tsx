@@ -32,22 +32,30 @@ export function StalePrTable({ rows }: { rows: StaleRow[] }) {
       (r) =>
         (!repo || r.repoFullName === repo) &&
         (!q ||
-          [r.title, `#${r.number}`, r.repoName, r.authorName, r.authorLogin].some((s) =>
-            s.toLowerCase().includes(q),
-          )),
+          [
+            r.title,
+            `#${r.number}`,
+            r.repoName,
+            r.authorName,
+            r.authorLogin,
+          ].some((s) => s.toLowerCase().includes(q))),
     );
     // Rows arrive oldest-first.
     return oldestFirst ? filtered : [...filtered].reverse();
   }, [rows, query, repo, oldestFirst]);
 
-  const githubHref = repo ? `${GH}/${repo}/pulls` : `${GH}/pulls/review-requested`;
+  const githubHref = repo
+    ? `${GH}/${repo}/pulls`
+    : `${GH}/pulls/review-requested`;
 
   return (
     <section className="rounded-lg border border-zinc-200 bg-white">
       <div className="flex items-start justify-between px-6 pt-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-lg font-semibold text-zinc-900">Stale pull requests</h2>
+            <h2 className="text-lg font-semibold text-zinc-900">
+              Stale pull requests
+            </h2>
             <span className="rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[11px] font-medium text-amber-700">
               {rows.length}
             </span>
@@ -140,22 +148,35 @@ export function StalePrTable({ rows }: { rows: StaleRow[] }) {
           </thead>
           <tbody>
             {visible.map((r) => (
-              <tr key={r.id} className="h-[76px] border-t border-zinc-200 first:border-t-0">
+              <tr
+                key={r.id}
+                className="h-[76px] border-t border-zinc-200 first:border-t-0"
+              >
                 <td className="pl-6">
                   <span className="flex items-center gap-3 font-mono text-[11px] text-zinc-900">
-                    <RepoIcon width={16} height={16} className="text-zinc-600" />
+                    <RepoIcon
+                      width={16}
+                      height={16}
+                      className="text-zinc-600"
+                    />
                     {r.repoName}
                   </span>
                 </td>
                 <td>
-                  <div className="text-[13px] font-medium text-zinc-900">{r.title}</div>
-                  <div className="mt-1.5 font-mono text-[10px] text-zinc-500">#{r.number}</div>
+                  <div className="text-[13px] font-medium text-zinc-900">
+                    {r.title}
+                  </div>
+                  <div className="mt-1.5 font-mono text-[10px] text-zinc-500">
+                    #{r.number}
+                  </div>
                 </td>
                 <td>
                   <span className="flex items-center gap-3">
                     <Avatar name={r.authorName} />
                     <span>
-                      <span className="block text-xs text-zinc-900">{r.authorName}</span>
+                      <span className="block text-xs text-zinc-900">
+                        {r.authorName}
+                      </span>
                       <span className="mt-1 block font-mono text-[10px] text-zinc-500">
                         @{r.authorLogin}
                       </span>

@@ -1,7 +1,10 @@
 {
   "name": "devpulse",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently -n web,api -c cyan,green \"npm run dev -w apps/web\" \"npm run dev -w apps/api\"",
     "build": "npm run build --workspaces --if-present",
@@ -10,6 +13,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5"
   }
 }

@@ -8,12 +8,16 @@ const next = () => ++seq;
 // "Unchecked" inputs take plain FK ids (teamId) instead of nested `connect`.
 // Parents are auto-created when the FK isn't supplied.
 
-export async function createTeam(overrides: Partial<Prisma.TeamUncheckedCreateInput> = {}) {
+export async function createTeam(
+  overrides: Partial<Prisma.TeamUncheckedCreateInput> = {},
+) {
   const n = next();
   return prisma.team.create({ data: { name: `Team ${n}`, ...overrides } });
 }
 
-export async function createMember(overrides: Partial<Prisma.MemberUncheckedCreateInput> = {}) {
+export async function createMember(
+  overrides: Partial<Prisma.MemberUncheckedCreateInput> = {},
+) {
   const n = next();
   return prisma.member.create({
     data: {
@@ -54,7 +58,9 @@ export async function createPullRequest(
   });
 }
 
-export async function createIssue(overrides: Partial<Prisma.IssueUncheckedCreateInput> = {}) {
+export async function createIssue(
+  overrides: Partial<Prisma.IssueUncheckedCreateInput> = {},
+) {
   const n = next();
   return prisma.issue.create({
     data: {

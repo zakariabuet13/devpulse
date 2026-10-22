@@ -16,7 +16,9 @@ export function ViewToggle({ view, teamId }: Props) {
       scroll={false}
       aria-current={view === v ? "page" : undefined}
       className={`flex h-[30px] items-center gap-1.5 rounded px-2 text-[13px] ${
-        view === v ? "bg-white font-medium text-zinc-900 shadow-sm" : "text-zinc-500"
+        view === v
+          ? "bg-white font-medium text-zinc-900 shadow-sm"
+          : "text-zinc-500"
       }`}
     >
       {icon}
@@ -24,9 +26,17 @@ export function ViewToggle({ view, teamId }: Props) {
     </Link>
   );
   return (
-    <nav aria-label="View" className="flex h-9 items-center rounded-md bg-zinc-100 p-[3px]">
+    <nav
+      aria-label="View"
+      className="flex h-9 items-center rounded-md bg-zinc-100 p-[3px]"
+    >
       {item("board", `?${team}`, <BoardIcon width={15} height={15} />, "Board")}
-      {item("list", `?${team}&view=list`, <ListIcon width={15} height={15} />, "List")}
+      {item(
+        "list",
+        `?${team}&view=list`,
+        <ListIcon width={15} height={15} />,
+        "List",
+      )}
     </nav>
   );
 }

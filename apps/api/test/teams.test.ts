@@ -29,32 +29,53 @@ describe("GET /teams", () => {
     expect(res.body.total).toBe(2);
   });
 
-  it.each(["0", "101"])("rejects limit=%s with a ZodIssue[] body", async (limit) => {
-    const res = await request(createApp()).get(`/teams?limit=${limit}`);
+  it.each(["0", "101"])(
+    "rejects limit=%s with a ZodIssue[] body",
+    async (limit) => {
+      const res = await request(createApp()).get(`/teams?limit=${limit}`);
 
-    expect(res.status).toBe(400);
-    expect(Array.isArray(res.body.error)).toBe(true);
-  });
+      expect(res.status).toBe(400);
+      expect(Array.isArray(res.body.error)).toBe(true);
+    },
+  );
 
   it("orders by createdAt ascending regardless of insert order", async () => {
-    await createTeam({ name: "B", createdAt: new Date("2024-01-02T00:00:00Z") });
-    await createTeam({ name: "C", createdAt: new Date("2024-01-03T00:00:00Z") });
-    await createTeam({ name: "A", createdAt: new Date("2024-01-01T00:00:00Z") });
+    await createTeam({
+      name: "B",
+      createdAt: new Date("2024-01-02T00:00:00Z"),
+    });
+    await createTeam({
+      name: "C",
+      createdAt: new Date("2024-01-03T00:00:00Z"),
+    });
+    await createTeam({
+      name: "A",
+      createdAt: new Date("2024-01-01T00:00:00Z"),
+    });
 
     const res = await request(createApp()).get("/teams");
 
-    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["A", "B", "C"]);
+    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual([
+      "A",
+      "B",
+      "C",
+    ]);
   });
 
   it("offset skips exactly offset rows", async () => {
     for (const day of ["01", "02", "03"]) {
-      await createTeam({ name: `T${day}`, createdAt: new Date(`2024-01-${day}T00:00:00Z`) });
+      await createTeam({
+        name: `T${day}`,
+        createdAt: new Date(`2024-01-${day}T00:00:00Z`),
+      });
     }
 
     const res = await request(createApp()).get("/teams?limit=1&offset=1");
 
     expect(res.body).toMatchObject({ total: 3, limit: 1, offset: 1 });
-    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual(["T02"]);
+    expect(res.body.items.map((t: { name: string }) => t.name)).toEqual([
+      "T02",
+    ]);
   });
 
   it("pages through rows with identical createdAt using the id tiebreaker", async () => {
@@ -79,17 +100,22 @@ describe("GET /teams", () => {
     expect(res.body.limit).toBe(100);
   });
 
-  it.each(["-1", "abc"])("rejects offset=%s with a ZodIssue[] body", async (offset) => {
-    const res = await request(createApp()).get(`/teams?offset=${offset}`);
+  it.each(["-1", "abc"])(
+    "rejects offset=%s with a ZodIssue[] body",
+    async (offset) => {
+      const res = await request(createApp()).get(`/teams?offset=${offset}`);
 
-    expect(res.status).toBe(400);
-    expect(Array.isArray(res.body.error)).toBe(true);
-  });
+      expect(res.status).toBe(400);
+      expect(Array.isArray(res.body.error)).toBe(true);
+    },
+  );
 });
 
 describe("POST /teams", () => {
   it("creates a team", async () => {
-    const res = await request(createApp()).post("/teams").send({ name: "Platform" });
+    const res = await request(createApp())
+      .post("/teams")
+      .send({ name: "Platform" });
 
     expect(res.status).toBe(201);
     const team = teamSchema.parse(res.body);
@@ -152,7 +178,9 @@ describe("/teams/:id", () => {
   it("PATCH renames", async () => {
     const team = await createTeam();
 
-    const res = await request(createApp()).patch(`/teams/${team.id}`).send({ name: "renamed" });
+    const res = await request(createApp())
+      .patch(`/teams/${team.id}`)
+      .send({ name: "renamed" });
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe("renamed");
@@ -164,7 +192,9 @@ describe("/teams/:id", () => {
   ])("PATCH with %s is 400", async (_label, body) => {
     const team = await createTeam();
 
-    const res = await request(createApp()).patch(`/teams/${team.id}`).send(body);
+    const res = await request(createApp())
+      .patch(`/teams/${team.id}`)
+      .send(body);
 
     expect(res.status).toBe(400);
   });
@@ -207,7 +237,9 @@ describe("/teams/:id", () => {
     const app = createApp();
 
     expect((await request(app).delete(`/teams/${team.id}`)).status).toBe(409);
-    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(204);
+    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(
+      204,
+    );
     expect((await request(app).delete(`/teams/${team.id}`)).status).toBe(204);
   });
 
@@ -219,7 +251,10 @@ describe("/teams/:id", () => {
 
     for (const res of [get, patch]) {
       expect(res.status).toBe(404);
-      expect(res.body.error).toMatchObject({ code: "NOT_FOUND", message: "Team not found" });
+      expect(res.body.error).toMatchObject({
+        code: "NOT_FOUND",
+        message: "Team not found",
+      });
     }
   });
 
@@ -231,14 +266,20 @@ describe("/teams/:id", () => {
       .send({ name: "after", nmae: "x" });
 
     expect(res.status).toBe(400);
-    expect((await prisma.team.findUnique({ where: { id: team.id } }))?.name).toBe("before");
+    expect(
+      (await prisma.team.findUnique({ where: { id: team.id } }))?.name,
+    ).toBe("before");
   });
 
   it("PATCH persists the new name", async () => {
     const team = await createTeam({ name: "before" });
 
-    await request(createApp()).patch(`/teams/${team.id}`).send({ name: "after" });
+    await request(createApp())
+      .patch(`/teams/${team.id}`)
+      .send({ name: "after" });
 
-    expect((await prisma.team.findUnique({ where: { id: team.id } }))?.name).toBe("after");
+    expect(
+      (await prisma.team.findUnique({ where: { id: team.id } }))?.name,
+    ).toBe("after");
   });
 });

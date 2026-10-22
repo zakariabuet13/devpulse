@@ -34,7 +34,10 @@ export class ValidationError extends AppError {
 // `S extends z.ZodType` keeps the schema's concrete type, so the return type
 // `z.output<S>` is the parsed value (e.g. defaults applied) rather than `unknown`.
 // Use for request body and query only; a ZodError from anywhere else is a server bug (500).
-export function parseInput<S extends z.ZodType>(schema: S, data: unknown): z.output<S> {
+export function parseInput<S extends z.ZodType>(
+  schema: S,
+  data: unknown,
+): z.output<S> {
   const result = schema.safeParse(data);
   if (!result.success) throw new ValidationError(result.error.issues);
   return result.data;
@@ -42,7 +45,9 @@ export function parseInput<S extends z.ZodType>(schema: S, data: unknown): z.out
 
 // adapter-pg puts the violated constraint at meta.driverAdapterError.cause.constraint.index
 // (no meta.target), e.g. "Member_githubLogin_key".
-function constraintName(e: Prisma.PrismaClientKnownRequestError): string | undefined {
+function constraintName(
+  e: Prisma.PrismaClientKnownRequestError,
+): string | undefined {
   const meta = e.meta as
     | { driverAdapterError?: { cause?: { constraint?: { index?: string } } } }
     | undefined;
@@ -59,7 +64,9 @@ export function mapPrismaError(e: unknown): AppError | undefined {
   switch (e.code) {
     case "P2002": {
       const name = constraintName(e);
-      return new ConflictError((name && UNIQUE_MESSAGES[name]) ?? "Resource already exists");
+      return new ConflictError(
+        (name && UNIQUE_MESSAGES[name]) ?? "Resource already exists",
+      );
     }
     case "P2025":
       return new NotFoundError("Resource not found");

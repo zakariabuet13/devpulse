@@ -6,7 +6,10 @@ type Props = { teamId: string; q: string; teams: Team[] };
 
 export async function MembersSection({ teamId, q, teams }: Props) {
   const query = q ? `?q=${encodeURIComponent(q)}` : "";
-  const members = await fetchAll(`/teams/${encodeURIComponent(teamId)}/members${query}`, memberSchema);
+  const members = await fetchAll(
+    `/teams/${encodeURIComponent(teamId)}/members${query}`,
+    memberSchema,
+  );
   return <MemberList members={members} teams={teams} />;
 }
 

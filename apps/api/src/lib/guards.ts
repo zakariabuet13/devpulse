@@ -3,12 +3,18 @@ import { NotFoundError } from "../errors";
 import { Prisma } from "../generated/prisma/client.js";
 
 export async function ensureTeam(id: string): Promise<void> {
-  const team = await prisma.team.findUnique({ where: { id }, select: { id: true } });
+  const team = await prisma.team.findUnique({
+    where: { id },
+    select: { id: true },
+  });
   if (!team) throw new NotFoundError("Team not found");
 }
 
 export async function ensureRepository(id: string): Promise<void> {
-  const repo = await prisma.repository.findUnique({ where: { id }, select: { id: true } });
+  const repo = await prisma.repository.findUnique({
+    where: { id },
+    select: { id: true },
+  });
   if (!repo) throw new NotFoundError("Repository not found");
 }
 

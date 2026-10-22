@@ -1,10 +1,18 @@
 "use client";
 
 // Next 16 passes `retry` (not `reset`).
-export default function Error({ error, retry }: { error: Error; retry: () => void }) {
+export default function Error({
+  error,
+  retry,
+}: {
+  error: Error;
+  retry: () => void;
+}) {
   return (
     <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
-      <h2 className="text-lg font-semibold text-red-900">Something went wrong</h2>
+      <h2 className="text-lg font-semibold text-red-900">
+        Something went wrong
+      </h2>
       <p className="mt-2 text-sm text-red-800">{error.message}</p>
       <button
         type="button"

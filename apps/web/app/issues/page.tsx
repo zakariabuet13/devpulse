@@ -1,10 +1,15 @@
 import { Suspense } from "react";
 import { teamSchema } from "@devpulse/shared";
-import { IssueBoardSkeleton, IssuesBoardSection } from "@/components/IssuesBoardSection";
+import {
+  IssueBoardSkeleton,
+  IssuesBoardSection,
+} from "@/components/IssuesBoardSection";
 import { TeamSelect } from "@/components/TeamSelect";
 import { fetchAll } from "@/lib/api";
 
-export default async function IssuesPage({ searchParams }: PageProps<"/issues">) {
+export default async function IssuesPage({
+  searchParams,
+}: PageProps<"/issues">) {
   const { team, view } = await searchParams;
   const teams = await fetchAll("/teams", teamSchema);
 
@@ -23,7 +28,9 @@ export default async function IssuesPage({ searchParams }: PageProps<"/issues">)
     <div className="flex flex-col gap-8">
       <div className="-mb-[7px] flex items-start justify-between">
         <div>
-          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">Issues</h1>
+          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">
+            Issues
+          </h1>
           <p className="mt-1 text-[13px] text-zinc-600">
             A clear view of your team&apos;s open issues, organized by priority.
           </p>
@@ -32,7 +39,10 @@ export default async function IssuesPage({ searchParams }: PageProps<"/issues">)
       </div>
       {/* Keyed by team so switching teams shows the skeleton and resets the filters. */}
       <Suspense key={selected.id} fallback={<IssueBoardSkeleton />}>
-        <IssuesBoardSection teamId={selected.id} view={view === "list" ? "list" : "board"} />
+        <IssuesBoardSection
+          teamId={selected.id}
+          view={view === "list" ? "list" : "board"}
+        />
       </Suspense>
     </div>
   );
