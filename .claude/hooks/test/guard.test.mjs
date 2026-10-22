@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { before, test } from "node:test";
-import { makeRepo, runHook, tempDir, write } from "./helpers.mjs";
+import { git, makeRepo, runHook, tempDir, write } from "./helpers.mjs";
 
 const MIG = "apps/api/prisma/migrations";
 let repo;
@@ -20,10 +20,7 @@ const pre = (tool_name, tool_input, cwd = repo) => ({
 
 function assertDenied(r, reasonPattern) {
   assert.equal(r.code, 2);
-  const out = r.json.hookSpecificOutput;
-  assert.equal(out.hookEventName, "PreToolUse");
-  assert.equal(out.permissionDecision, "deny");
-  assert.match(out.permissionDecisionReason, reasonPattern);
+  assert.equal(r.stdout.trim(), ""); // exit 2 uses stderr only; stdout JSON would be ignored
   assert.match(r.stderr, reasonPattern);
 }
 
@@ -57,6 +54,18 @@ test("denies a relative tracked path", () => {
     pre("Edit", { file_path: `${MIG}\\20240101_init\\migration.sql` }),
   );
   assertDenied(r, /new migration/i);
+});
+
+test("denies a tracked migration reached through .. segments", () => {
+  const file = `${repo}/apps/api/src/../prisma/migrations/20240101_init/migration.sql`;
+  assertDenied(runHook("guard.mjs", pre("Edit", { file_path: file })), /new migration/i);
+});
+
+test("allows a migration that is only staged (not in HEAD yet)", () => {
+  const staged = write(repo, `${MIG}/20240303_staged/migration.sql`, "select 3;\n");
+  git(repo, "add", "--", staged);
+  assertAllowed(runHook("guard.mjs", pre("Edit", { file_path: staged })));
+  git(repo, "reset", "-q", "--", staged);
 });
 
 test("allows untracked migration, including one in a new dir", () => {
@@ -93,14 +102,11 @@ test("blocks when git state cannot be determined (not a repo)", () => {
     "guard.mjs",
     pre("Edit", { file_path: join(dir, MIG, "x", "migration.sql") }, dir),
   );
-  assert.equal(r.code, 2);
-  assert.equal(r.json.hookSpecificOutput.permissionDecision, "deny");
+  assertDenied(r, /guard hook failed/);
 });
 
 test("blocks on malformed stdin", () => {
-  const r = runHook("guard.mjs", "not json");
-  assert.equal(r.code, 2);
-  assert.equal(r.json.hookSpecificOutput.permissionDecision, "deny");
+  assertDenied(runHook("guard.mjs", "not json"), /guard hook failed/);
 });
 
 for (const [tool, command] of [

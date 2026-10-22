@@ -61,6 +61,21 @@ test("allows new untracked migration, and a deleted non-BOM file", () => {
   assert.equal(r.stdout.trim(), "");
 });
 
+test("allows a staged new migration (git add), still blocks edits to committed ones", () => {
+  const repo = repoWith();
+  write(repo, `${MIG}/2_add/migration.sql`, "select 2;\n");
+  git(repo, "add", "-A");
+  let r = runHook("tree-check.mjs", stop(repo));
+  assert.equal(r.code, 0);
+  assert.equal(r.stdout.trim(), "");
+
+  write(repo, `${MIG}/1_init/migration.sql`, "select 99;\n");
+  r = runHook("tree-check.mjs", stop(repo));
+  assert.equal(r.json.decision, "block");
+  assert.match(r.json.reason, /1_init/);
+  assert.doesNotMatch(r.json.reason, /2_add/);
+});
+
 test("stop_hook_active: warns via systemMessage instead of blocking", () => {
   const repo = repoWith();
   write(repo, "bom.ts", BOM + "x\n");

@@ -26,6 +26,9 @@ Run from repo root:
 - Case-insensitive uniqueness of `githubLogin` / `githubFullName` is enforced by the DB: both columns are `@db.Citext` (migration `citext_github_names` creates the extension), so the `@unique` index is case-insensitive and violations surface as P2002 -> 409. No app-level pre-check; stored casing is kept as given.
 - Claude can't read `.env` (team settings deny it): add new env vars to `apps/api/.env.example` and ask the user to copy them into `.env`.
 
+## Workflow
+
+- After editing `apps/web`, run `npm run typecheck -w apps/web` (the Stop hook only gates `apps/api` and `packages/shared`).
 
 ## Compact Instructions
 

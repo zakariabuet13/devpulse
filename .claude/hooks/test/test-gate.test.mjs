@@ -92,15 +92,25 @@ test("tests red: blocks", () => {
   assert.deepEqual(ran(), ["typecheck", "test"]);
 });
 
-test("postgres unreachable: no block, tells you to docker compose up -d, not cached", () => {
+test("postgres unreachable: no block, tells you to docker compose up -d; retry skips the green typecheck", () => {
   touchApi();
   const cmds = [cmd("typecheck"), cmd("test", { code: 1, out: "Error: Can't reach database server at `localhost:5435`\n" })];
   const r = gate(cmds);
   assert.equal(r.code, 0);
   assert.equal(r.json.decision, undefined);
   assert.match(r.json.systemMessage, /docker compose up -d/);
-  gate(cmds);
-  assert.equal(ran().filter((n) => n === "test").length, 2);
+  gate(cmds); // tests still re-run (Postgres may be up now), typecheck is not
+  assert.deepEqual(ran(), ["typecheck", "test", "test"]);
+});
+
+test("tests red then fixed with the same files: resumes at the tests, then caches full green", () => {
+  touchApi();
+  gate([cmd("typecheck"), cmd("test", { code: 1, out: "FAIL x\n" })]);
+  const r = gate(green()); // same fingerprint, test now passes
+  assert.equal(r.stdout.trim(), "");
+  assert.deepEqual(ran(), ["typecheck", "test", "test"]);
+  gate(green());
+  assert.deepEqual(ran(), ["typecheck", "test", "test"]);
 });
 
 test("stop_hook_active and still red: warns, does not block", () => {

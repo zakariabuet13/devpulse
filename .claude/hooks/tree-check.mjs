@@ -24,7 +24,9 @@ try {
   const changed = changedFiles(root);
 
   const bom = changed.filter((f) => !f.status.includes("D") && hasBom(join(root, f.path))).map((f) => f.path);
-  const migrations = changed.filter((f) => f.status !== "??" && MIGRATIONS.test(f.path)).map((f) => f.path);
+  // `??` (untracked) and `A` (staged new) are new migrations, not modified committed ones.
+  const isNew = (f) => f.status === "??" || f.status[0] === "A";
+  const migrations = changed.filter((f) => !isNew(f) && MIGRATIONS.test(f.path)).map((f) => f.path);
 
   const problems = [];
   if (bom.length) problems.push(`Files start with a UTF-8 BOM (rewrite them as UTF-8 without BOM):\n${list(bom)}`);

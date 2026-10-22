@@ -17,26 +17,21 @@ function stripInertText(command) {
   return command.replace(INERT_TEXT, '$1 ""');
 }
 
+// Exit 2 + stderr is the whole contract: Claude Code ignores stdout JSON on exit 2.
 function deny(reason) {
-  process.stdout.write(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "PreToolUse",
-        permissionDecision: "deny",
-        permissionDecisionReason: reason,
-      },
-    }) + "\n",
-  );
   process.stderr.write(reason + "\n");
   process.exit(2);
 }
 
-function isTracked(abs) {
+// "Committed" = present in HEAD. A migration that is only staged (`git add`) is still new.
+function isCommitted(abs) {
   let dir = dirname(abs);
   while (!existsSync(dir)) dir = dirname(dir); // new files may sit in dirs that don't exist yet
-  const r = git(dir, ["ls-files", "--error-unmatch", "--", relative(dir, abs)]);
-  if (r.status === 0) return true;
-  if (r.status === 1) return false; // pathspec matched nothing => untracked
+  const r = git(dir, ["ls-tree", "--name-only", "HEAD", "--", relative(dir, abs)]);
+  if (r.status === 0) return r.stdout.trim() !== "";
+  const noCommitsYet =
+    git(dir, ["rev-parse", "--git-dir"]).status === 0 && git(dir, ["rev-parse", "--verify", "-q", "HEAD"]).status !== 0;
+  if (noCommitsYet) return false;
   throw new Error(r.stderr);
 }
 
@@ -45,7 +40,8 @@ try {
 
   if (tool_name === "Edit" || tool_name === "Write") {
     const file = toSlashes(String(tool_input.file_path ?? ""));
-    if (MIGRATIONS.test(file) && isTracked(resolve(cwd, file))) {
+    const abs = resolve(cwd, file); // collapses `..` so apps/api/src/../prisma/migrations/... can't slip past
+    if (MIGRATIONS.test(toSlashes(abs)) && isCommitted(abs)) {
       deny(
         `${file} is a committed migration and must never be edited. ` +
           "Make a new migration instead: change schema.prisma, then run `npx prisma migrate dev --name <change>` in apps/api.",
