@@ -9,7 +9,8 @@
     "dev": "concurrently -n web,api -c cyan,green \"npm run dev -w apps/web\" \"npm run dev -w apps/api\"",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test:hooks": "node --test \".claude/hooks/test/*.test.mjs\""
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
