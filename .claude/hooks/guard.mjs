@@ -6,6 +6,17 @@ import { MIGRATIONS, git, readInput, toSlashes } from "./lib.mjs";
 // `.env` as its own path segment/word, but not `.env.example` and not `process.env`.
 const ENV_FILE = /(?<!\w)\.env(?!\w)(?!\.example(?!\w))/i;
 
+// Free text that is never executed: the value of -m/--message/--title/--body when it is a
+// single-quoted string, a double-quoted string without `$`/backtick expansion, or a
+// `$(cat <<'EOF' ... EOF)` heredoc (quoted delimiter => no expansion). Blanked before ENV_FILE
+// runs so a commit message or PR title can mention .env. Anything else stays visible (fail closed).
+const INERT_TEXT =
+  /(?<![\w-])(-m|--message|--title|--body)(?:=|\s+)(?:"\$\(cat <<'(\w+)'\r?\n[\s\S]*?\r?\n\2\r?\n?\)"|"(?:[^"\\$`]|\\.)*"|'[^']*')/g;
+
+function stripInertText(command) {
+  return command.replace(INERT_TEXT, '$1 ""');
+}
+
 function deny(reason) {
   process.stdout.write(
     JSON.stringify({
@@ -41,7 +52,9 @@ try {
       );
     }
   } else if (tool_name === "Bash" || tool_name === "PowerShell") {
-    if (ENV_FILE.test(toSlashes(String(tool_input.command ?? "")))) {
+    if (
+      ENV_FILE.test(stripInertText(toSlashes(String(tool_input.command ?? ""))))
+    ) {
       deny(
         "Shell commands must not touch .env (see the Gotchas line in CLAUDE.md): " +
           "add new env vars to apps/api/.env.example and ask the user to copy them into .env.",

@@ -34,31 +34,65 @@ function assertAllowed(r) {
 
 test("denies Edit of a tracked migration, says how to make a new one", () => {
   const file = join(repo, MIG, "20240101_init", "migration.sql");
-  assertDenied(runHook("guard.mjs", pre("Edit", { file_path: file })), /new migration/i);
+  assertDenied(
+    runHook("guard.mjs", pre("Edit", { file_path: file })),
+    /new migration/i,
+  );
 });
 
 test("denies Write of a tracked migration given with backslashes", () => {
-  const file = join(repo, MIG, "20240101_init", "migration.sql").replaceAll("/", "\\");
-  assertDenied(runHook("guard.mjs", pre("Write", { file_path: file })), /prisma migrate dev/);
+  const file = join(repo, MIG, "20240101_init", "migration.sql").replaceAll(
+    "/",
+    "\\",
+  );
+  assertDenied(
+    runHook("guard.mjs", pre("Write", { file_path: file })),
+    /prisma migrate dev/,
+  );
 });
 
 test("denies a relative tracked path", () => {
-  const r = runHook("guard.mjs", pre("Edit", { file_path: `${MIG}\\20240101_init\\migration.sql` }));
+  const r = runHook(
+    "guard.mjs",
+    pre("Edit", { file_path: `${MIG}\\20240101_init\\migration.sql` }),
+  );
   assertDenied(r, /new migration/i);
 });
 
 test("allows untracked migration, including one in a new dir", () => {
-  assertAllowed(runHook("guard.mjs", pre("Edit", { file_path: join(repo, MIG, "20240202_new", "migration.sql") })));
-  assertAllowed(runHook("guard.mjs", pre("Write", { file_path: join(repo, MIG, "20250303_x", "migration.sql") })));
+  assertAllowed(
+    runHook(
+      "guard.mjs",
+      pre("Edit", {
+        file_path: join(repo, MIG, "20240202_new", "migration.sql"),
+      }),
+    ),
+  );
+  assertAllowed(
+    runHook(
+      "guard.mjs",
+      pre("Write", {
+        file_path: join(repo, MIG, "20250303_x", "migration.sql"),
+      }),
+    ),
+  );
 });
 
 test("allows edits outside migrations", () => {
-  assertAllowed(runHook("guard.mjs", pre("Edit", { file_path: join(repo, "apps/api/src/a.ts") })));
+  assertAllowed(
+    runHook(
+      "guard.mjs",
+      pre("Edit", { file_path: join(repo, "apps/api/src/a.ts") }),
+    ),
+  );
 });
 
 test("blocks when git state cannot be determined (not a repo)", () => {
   const dir = tempDir();
-  const r = runHook("guard.mjs", pre("Edit", { file_path: join(dir, MIG, "x", "migration.sql") }, dir));
+  const r = runHook(
+    "guard.mjs",
+    pre("Edit", { file_path: join(dir, MIG, "x", "migration.sql") }, dir),
+  );
   assert.equal(r.code, 2);
   assert.equal(r.json.hookSpecificOutput.permissionDecision, "deny");
 });
@@ -74,6 +108,11 @@ for (const [tool, command] of [
   ["Bash", "cat apps/api/.env | head"],
   ["Bash", "cp apps/api/.env.example apps/api/.env.local"],
   ["Bash", "echo X=1 >> apps/api/.env"],
+  ["Bash", 'git commit -m "x" && cat .env'],
+  ["Bash", 'git commit -m "$(cat .env)"'],
+  ["Bash", 'git commit -m "`cat .env`"'],
+  ["Bash", 'git commit -m "$(cat <<EOF\nmsg\nEOF\n)" && cat .env'],
+  ["Bash", 'gh pr create --title "x" ".env"'],
   ["PowerShell", "Get-Content apps\\api\\.env"],
   ["PowerShell", "Add-Content -Path .\\.env -Value X=1"],
 ]) {
@@ -87,6 +126,17 @@ for (const [tool, command] of [
   ["PowerShell", "Get-Content apps\\api\\.env.example"],
   ["Bash", 'node -e "console.log(process.env.HOME)"'],
   ["Bash", "npm run typecheck"],
+  ["Bash", 'git commit -m "feat: guard migration/.env edits"'],
+  ["Bash", "git commit -m 'never touch .env'"],
+  [
+    "Bash",
+    "git commit -m \"$(cat <<'EOF'\nfeat: guard .env\n\nbody mentions .env\nEOF\n)\"",
+  ],
+  [
+    "Bash",
+    'gh pr create --title "feat: migration/.env guard" --body-file body.md',
+  ],
+  ["Bash", 'gh pr create --title="x .env" --body "y .env"'],
 ]) {
   test(`allows ${tool}: ${command}`, () => {
     assertAllowed(runHook("guard.mjs", pre(tool, { command })));
