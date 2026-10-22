@@ -54,8 +54,12 @@ export function MemberList({ members, teams }: Props) {
             <div className="flex items-center gap-3">
               <Avatar name={m.name} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-medium text-zinc-900">{m.name}</div>
-                <div className="truncate font-mono text-[12px] text-zinc-500">@{m.githubLogin}</div>
+                <div className="truncate text-[14px] font-medium text-zinc-900">
+                  {m.name}
+                </div>
+                <div className="truncate font-mono text-[12px] text-zinc-500">
+                  @{m.githubLogin}
+                </div>
               </div>
               <select
                 aria-label={`Move ${m.name} to team`}
@@ -64,7 +68,9 @@ export function MemberList({ members, teams }: Props) {
                 onChange={(e) => move(m.id, e.target.value)}
                 className="h-9 w-[200px] cursor-pointer rounded-md border border-zinc-200 bg-white px-2 text-[13px] text-zinc-700 outline-none focus:border-zinc-400 disabled:cursor-wait disabled:opacity-60"
               >
-                <option value="">{pending ? "Moving…" : "Move to team…"}</option>
+                <option value="">
+                  {pending ? "Moving…" : "Move to team…"}
+                </option>
                 {teams
                   .filter((t) => t.id !== m.teamId)
                   .map((t) => (

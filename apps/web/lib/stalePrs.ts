@@ -5,7 +5,9 @@ export const STALE_THRESHOLD_MS = 3 * 24 * 60 * 60 * 1000;
 // `T extends Pick<PullRequest, ...>`: callers may pass richer rows (e.g. joined with repo and
 // author); only these two fields are required, and the extra fields come back untouched
 // because the result is typed `{ pr: T }` rather than `{ pr: PullRequest }`.
-export function getStalePrs<T extends Pick<PullRequest, "state" | "reviewRequestedAt">>(
+export function getStalePrs<
+  T extends Pick<PullRequest, "state" | "reviewRequestedAt">,
+>(
   prs: T[],
   now: Date,
   thresholdMs: number = STALE_THRESHOLD_MS,

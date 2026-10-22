@@ -6,7 +6,11 @@ const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
 const H = 3_600_000;
 const D = 24 * H;
 
-const pr = (id: string, state: "OPEN" | "CLOSED" | "MERGED", reviewRequestedAt: string | null) => ({
+const pr = (
+  id: string,
+  state: "OPEN" | "CLOSED" | "MERGED",
+  reviewRequestedAt: string | null,
+) => ({
   id,
   state,
   reviewRequestedAt,
@@ -56,7 +60,11 @@ describe("formatters", () => {
   });
 
   it("formatRequestedAt uses UTC", () => {
-    expect(formatRequestedAt("2026-10-06T08:00:00.000Z")).toBe("Oct 06, 08:00 UTC");
-    expect(formatRequestedAt("2026-10-10T02:05:00.000Z")).toBe("Oct 10, 02:05 UTC");
+    expect(formatRequestedAt("2026-10-06T08:00:00.000Z")).toBe(
+      "Oct 06, 08:00 UTC",
+    );
+    expect(formatRequestedAt("2026-10-10T02:05:00.000Z")).toBe(
+      "Oct 10, 02:05 UTC",
+    );
   });
 });

@@ -1,7 +1,13 @@
 import { Suspense } from "react";
 import { teamSchema } from "@devpulse/shared";
-import { DashboardStats, DashboardStatsSkeleton } from "@/components/DashboardStats";
-import { StalePrSection, StalePrSectionSkeleton } from "@/components/StalePrSection";
+import {
+  DashboardStats,
+  DashboardStatsSkeleton,
+} from "@/components/DashboardStats";
+import {
+  StalePrSection,
+  StalePrSectionSkeleton,
+} from "@/components/StalePrSection";
 import { TeamSelect } from "@/components/TeamSelect";
 import { fetchAll } from "@/lib/api";
 
@@ -25,7 +31,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     <div className="flex flex-col gap-8">
       <div className="-mb-[7px] flex items-start justify-between">
         <div>
-          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">Team Health</h1>
+          <h1 className="text-[32px] font-normal leading-10 text-zinc-900">
+            Team Health
+          </h1>
           <p className="mt-1 text-[13px] text-zinc-600">
             A clear view of your team&apos;s open work and review bottlenecks.
           </p>

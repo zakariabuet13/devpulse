@@ -34,11 +34,20 @@ describe("GET /teams/:teamId/stats", () => {
     await createIssue({ repositoryId: a.id, priority: "URGENT" });
     await createIssue({ repositoryId: a.id, priority: "LOW" });
     await createIssue({ repositoryId: b.id, priority: "LOW" });
-    await createIssue({ repositoryId: b.id, priority: "HIGH", state: "CLOSED" });
+    await createIssue({
+      repositoryId: b.id,
+      priority: "HIGH",
+      state: "CLOSED",
+    });
 
     const res = await request(createApp()).get(`/teams/${team.id}/stats`);
 
-    expect(res.body.openIssuesByPriority).toEqual({ LOW: 2, MEDIUM: 0, HIGH: 0, URGENT: 1 });
+    expect(res.body.openIssuesByPriority).toEqual({
+      LOW: 2,
+      MEDIUM: 0,
+      HIGH: 0,
+      URGENT: 1,
+    });
   });
 
   it("counts only OPEN pull requests", async () => {
@@ -47,7 +56,11 @@ describe("GET /teams/:teamId/stats", () => {
     await createPullRequest({ repositoryId: repo.id, state: "OPEN" });
     await createPullRequest({ repositoryId: repo.id, state: "OPEN" });
     await createPullRequest({ repositoryId: repo.id, state: "CLOSED" });
-    await createPullRequest({ repositoryId: repo.id, state: "MERGED", mergedAt: new Date() });
+    await createPullRequest({
+      repositoryId: repo.id,
+      state: "MERGED",
+      mergedAt: new Date(),
+    });
 
     const res = await request(createApp()).get(`/teams/${team.id}/stats`);
 
@@ -74,7 +87,11 @@ describe("GET /teams/:teamId/stats", () => {
   it("ignores non-MERGED PRs even with a recent mergedAt", async () => {
     const team = await createTeam();
     const repo = await createRepository({ teamId: team.id });
-    await createPullRequest({ repositoryId: repo.id, state: "CLOSED", mergedAt: new Date() });
+    await createPullRequest({
+      repositoryId: repo.id,
+      state: "CLOSED",
+      mergedAt: new Date(),
+    });
 
     const res = await request(createApp()).get(`/teams/${team.id}/stats`);
 
@@ -86,7 +103,11 @@ describe("GET /teams/:teamId/stats", () => {
     const other = await createRepository({ teamId: (await createTeam()).id });
     await createIssue({ repositoryId: other.id, priority: "HIGH" });
     await createPullRequest({ repositoryId: other.id, state: "OPEN" });
-    await createPullRequest({ repositoryId: other.id, state: "MERGED", mergedAt: new Date() });
+    await createPullRequest({
+      repositoryId: other.id,
+      state: "MERGED",
+      mergedAt: new Date(),
+    });
 
     const res = await request(createApp()).get(`/teams/${team.id}/stats`);
 

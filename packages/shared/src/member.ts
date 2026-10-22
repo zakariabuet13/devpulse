@@ -9,7 +9,9 @@ import {
 const memberName = z.string().trim().min(1).max(100);
 
 // GitHub login: 1-39 chars, alphanumeric or single hyphens, no leading/trailing hyphen.
-const githubLogin = z.string().regex(/^(?!-)(?!.*--)(?!.*-$)[A-Za-z0-9-]{1,39}$/);
+const githubLogin = z
+  .string()
+  .regex(/^(?!-)(?!.*--)(?!.*-$)[A-Za-z0-9-]{1,39}$/);
 
 export const memberSchema = z.object({
   id: z.string(),

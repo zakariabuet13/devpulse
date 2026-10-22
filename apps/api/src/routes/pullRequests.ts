@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { pullRequestListQuerySchema, type PullRequestListQuery } from "@devpulse/shared";
+import {
+  pullRequestListQuerySchema,
+  type PullRequestListQuery,
+} from "@devpulse/shared";
 import { prisma } from "../db";
 import { toPullRequestDto } from "../dto";
 import { NotFoundError, parseInput } from "../errors";
@@ -23,7 +26,10 @@ async function listPullRequests(
     query.sort === "number"
       ? { number: query.order }
       : { [query.sort]: { sort: query.order, nulls: "last" } };
-  const orderBy = [primary, { id: "asc" }] satisfies Prisma.PullRequestOrderByWithRelationInput[];
+  const orderBy = [
+    primary,
+    { id: "asc" },
+  ] satisfies Prisma.PullRequestOrderByWithRelationInput[];
 
   const [rows, total] = await Promise.all([
     prisma.pullRequest.findMany({ where, orderBy, ...pageArgs(query) }),
@@ -41,11 +47,18 @@ pullRequestsRouter.get("/repositories/:id/pull-requests", async (req, res) => {
 pullRequestsRouter.get("/teams/:teamId/pull-requests", async (req, res) => {
   const query = parseInput(pullRequestListQuerySchema, req.query);
   await ensureTeam(req.params.teamId);
-  res.json(await listPullRequests({ repository: { teamId: req.params.teamId } }, query));
+  res.json(
+    await listPullRequests(
+      { repository: { teamId: req.params.teamId } },
+      query,
+    ),
+  );
 });
 
 pullRequestsRouter.get("/pull-requests/:id", async (req, res) => {
-  const pr = await prisma.pullRequest.findUnique({ where: { id: req.params.id } });
+  const pr = await prisma.pullRequest.findUnique({
+    where: { id: req.params.id },
+  });
   if (!pr) throw new NotFoundError("Pull request not found");
   res.json(toPullRequestDto(pr));
 });

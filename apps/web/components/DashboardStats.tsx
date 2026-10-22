@@ -7,8 +7,18 @@ export async function DashboardStats({ teamId }: { teamId: string }) {
   const across = `Across ${d.repoCount} ${d.repoCount === 1 ? "repository" : "repositories"}`;
   return (
     <div className="grid grid-cols-4 gap-4">
-      <StatCard label="Open issues" value={d.openIssues} subline={across} icon={<IssueIcon />} />
-      <StatCard label="Open PRs" value={d.openPrs} subline={across} icon={<PullRequestIcon />} />
+      <StatCard
+        label="Open issues"
+        value={d.openIssues}
+        subline={across}
+        icon={<IssueIcon />}
+      />
+      <StatCard
+        label="Open PRs"
+        value={d.openPrs}
+        subline={across}
+        icon={<PullRequestIcon />}
+      />
       <StatCard
         label="PRs awaiting review"
         value={d.awaitingReview}

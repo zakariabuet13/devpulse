@@ -48,8 +48,16 @@ describe("GET /teams/:teamId/members", () => {
 
     it("matches name case-insensitively, as a substring", async () => {
       const team = await createTeam();
-      await createMember({ teamId: team.id, name: "Grace Hopper", githubLogin: "gh1" });
-      await createMember({ teamId: team.id, name: "Alan Turing", githubLogin: "at1" });
+      await createMember({
+        teamId: team.id,
+        name: "Grace Hopper",
+        githubLogin: "gh1",
+      });
+      await createMember({
+        teamId: team.id,
+        name: "Alan Turing",
+        githubLogin: "at1",
+      });
 
       const res = await search(team.id, "ACE HOP");
 
@@ -60,8 +68,16 @@ describe("GET /teams/:teamId/members", () => {
 
     it("matches githubLogin case-insensitively, as a substring", async () => {
       const team = await createTeam();
-      await createMember({ teamId: team.id, name: "One", githubLogin: "Ada-Lovelace" });
-      await createMember({ teamId: team.id, name: "Two", githubLogin: "other" });
+      await createMember({
+        teamId: team.id,
+        name: "One",
+        githubLogin: "Ada-Lovelace",
+      });
+      await createMember({
+        teamId: team.id,
+        name: "Two",
+        githubLogin: "other",
+      });
 
       const res = await search(team.id, "LOVE");
 
@@ -70,7 +86,11 @@ describe("GET /teams/:teamId/members", () => {
 
     it("only searches within the requested team", async () => {
       const team = await createTeam();
-      await createMember({ teamId: team.id, name: "Zed", githubLogin: "zed-in" });
+      await createMember({
+        teamId: team.id,
+        name: "Zed",
+        githubLogin: "zed-in",
+      });
       await createMember({ name: "Zed", githubLogin: "zed-out" });
 
       const res = await search(team.id, "zed");
@@ -101,8 +121,16 @@ describe("GET /teams/:teamId/members", () => {
 
     it("treats % and _ literally", async () => {
       const team = await createTeam();
-      await createMember({ teamId: team.id, name: "100% Real", githubLogin: "real" });
-      await createMember({ teamId: team.id, name: "Plain", githubLogin: "plain" });
+      await createMember({
+        teamId: team.id,
+        name: "100% Real",
+        githubLogin: "real",
+      });
+      await createMember({
+        teamId: team.id,
+        name: "Plain",
+        githubLogin: "plain",
+      });
 
       expect(logins(await search(team.id, "%"))).toEqual(["real"]);
       expect(logins(await search(team.id, "_"))).toEqual([]);
@@ -120,7 +148,10 @@ describe("GET /teams/:teamId/members", () => {
         .query({ q: "dev", limit: 2, offset: 1 });
 
       expect(res.body.total).toBe(3);
-      expect(res.body.items.map((m: { name: string }) => m.name)).toEqual(["Dev B", "Dev C"]);
+      expect(res.body.items.map((m: { name: string }) => m.name)).toEqual([
+        "Dev B",
+        "Dev C",
+      ]);
       expect(res.body.limit).toBe(2);
       expect(res.body.offset).toBe(1);
     });
@@ -136,7 +167,10 @@ describe("POST /teams/:teamId/members", () => {
       .send({ name: "Smoke", githubLogin: "smoke-user" });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ teamId: team.id, githubLogin: "smoke-user" });
+    expect(res.body).toMatchObject({
+      teamId: team.id,
+      githubLogin: "smoke-user",
+    });
   });
 
   it("rejects a case-differing duplicate login with a 409 dev envelope", async () => {
@@ -192,12 +226,17 @@ describe("POST /teams/:teamId/members", () => {
     ["login with a trailing hyphen", { name: "X", githubLogin: "x-" }],
     ["login longer than 39 chars", { name: "X", githubLogin: "a".repeat(40) }],
     ["blank name", { name: "   ", githubLogin: "x-user" }],
-    ["name longer than 100 chars", { name: "n".repeat(101), githubLogin: "x-user" }],
+    [
+      "name longer than 100 chars",
+      { name: "n".repeat(101), githubLogin: "x-user" },
+    ],
     ["missing githubLogin", { name: "X" }],
   ])("POST with %s is 400", async (_label, body) => {
     const team = await createTeam();
 
-    const res = await request(createApp()).post(`/teams/${team.id}/members`).send(body);
+    const res = await request(createApp())
+      .post(`/teams/${team.id}/members`)
+      .send(body);
 
     expect(res.status).toBe(400);
     expect(Array.isArray(res.body.error)).toBe(true);
@@ -220,7 +259,10 @@ describe("/members/:id", () => {
     const res = await request(createApp()).get("/members/nope");
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toMatchObject({ code: "NOT_FOUND", message: "Member not found" });
+    expect(res.body.error).toMatchObject({
+      code: "NOT_FOUND",
+      message: "Member not found",
+    });
   });
 
   it("GET returns the member", async () => {
@@ -229,7 +271,11 @@ describe("/members/:id", () => {
     const res = await request(createApp()).get(`/members/${member.id}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ id: member.id, githubLogin: "ada", teamId: member.teamId });
+    expect(res.body).toMatchObject({
+      id: member.id,
+      githubLogin: "ada",
+      teamId: member.teamId,
+    });
   });
 
   it("PATCH allows changing the case of the member's own login", async () => {
@@ -269,7 +315,9 @@ describe("/members/:id", () => {
   it("PATCH rejects empty teamId with 400 and a ZodIssue[] at path [teamId]", async () => {
     const member = await createMember();
 
-    const res = await request(createApp()).patch(`/members/${member.id}`).send({ teamId: "" });
+    const res = await request(createApp())
+      .patch(`/members/${member.id}`)
+      .send({ teamId: "" });
 
     expect(res.status).toBe(400);
     expect(Array.isArray(res.body.error)).toBe(true);
@@ -277,7 +325,9 @@ describe("/members/:id", () => {
   });
 
   it("PATCH of a missing member is 404 'Member not found'", async () => {
-    const res = await request(createApp()).patch("/members/nope").send({ name: "x" });
+    const res = await request(createApp())
+      .patch("/members/nope")
+      .send({ name: "x" });
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toBe("Member not found");
@@ -303,26 +353,38 @@ describe("/members/:id", () => {
   ])("PATCH with %s is 400 and changes nothing", async (_label, body) => {
     const member = await createMember({ name: "before" });
 
-    const res = await request(createApp()).patch(`/members/${member.id}`).send(body);
+    const res = await request(createApp())
+      .patch(`/members/${member.id}`)
+      .send(body);
 
     expect(res.status).toBe(400);
-    expect((await prisma.member.findUnique({ where: { id: member.id } }))?.name).toBe("before");
+    expect(
+      (await prisma.member.findUnique({ where: { id: member.id } }))?.name,
+    ).toBe("before");
   });
 
   it("PATCH persists the move", async () => {
     const member = await createMember();
     const target = await createTeam();
 
-    await request(createApp()).patch(`/members/${member.id}`).send({ teamId: target.id });
+    await request(createApp())
+      .patch(`/members/${member.id}`)
+      .send({ teamId: target.id });
 
-    expect((await prisma.member.findUnique({ where: { id: member.id } }))?.teamId).toBe(target.id);
+    expect(
+      (await prisma.member.findUnique({ where: { id: member.id } }))?.teamId,
+    ).toBe(target.id);
   });
 
   it("DELETE deletes, then 404s", async () => {
     const member = await createMember();
     const app = createApp();
 
-    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(204);
-    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(404);
+    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(
+      204,
+    );
+    expect((await request(app).delete(`/members/${member.id}`)).status).toBe(
+      404,
+    );
   });
 });

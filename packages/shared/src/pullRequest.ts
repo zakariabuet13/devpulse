@@ -24,7 +24,11 @@ export const pullRequestSchema = z.object({
 
 export type PullRequest = z.infer<typeof pullRequestSchema>;
 
-export const pullRequestSortSchema = z.enum(["number", "reviewRequestedAt", "mergedAt"]);
+export const pullRequestSortSchema = z.enum([
+  "number",
+  "reviewRequestedAt",
+  "mergedAt",
+]);
 
 export const pullRequestListQuerySchema = paginationQuerySchema.extend({
   state: csvOf(prStateSchema).optional(),

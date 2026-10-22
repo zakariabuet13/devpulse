@@ -16,13 +16,49 @@ const issue = (
   priority: Priority,
   labels: string[],
   repoName: string,
-) => ({ id, number, title, priority, labels, repoName, repoFullName: `devpulse/${repoName}` });
+) => ({
+  id,
+  number,
+  title,
+  priority,
+  labels,
+  repoName,
+  repoFullName: `devpulse/${repoName}`,
+});
 
 const rows = [
-  issue("a", 142, "Document local development setup", "LOW", ["documentation"], "developer-cli"),
-  issue("b", 512, "Rate limiter drops valid requests", "HIGH", ["bug", "api"], "api-gateway"),
-  issue("c", 518, "Production gateway returns 502s", "URGENT", ["incident"], "api-gateway"),
-  issue("d", 226, "Remove unused Terraform outputs", "LOW", ["cleanup"], "infra"),
+  issue(
+    "a",
+    142,
+    "Document local development setup",
+    "LOW",
+    ["documentation"],
+    "developer-cli",
+  ),
+  issue(
+    "b",
+    512,
+    "Rate limiter drops valid requests",
+    "HIGH",
+    ["bug", "api"],
+    "api-gateway",
+  ),
+  issue(
+    "c",
+    518,
+    "Production gateway returns 502s",
+    "URGENT",
+    ["incident"],
+    "api-gateway",
+  ),
+  issue(
+    "d",
+    226,
+    "Remove unused Terraform outputs",
+    "LOW",
+    ["cleanup"],
+    "infra",
+  ),
 ];
 
 const none = { query: "", repo: "", label: "" };
@@ -39,7 +75,12 @@ describe("groupByPriority", () => {
   });
 
   it("handles empty input", () => {
-    expect(groupByPriority([])).toEqual({ LOW: [], MEDIUM: [], HIGH: [], URGENT: [] });
+    expect(groupByPriority([])).toEqual({
+      LOW: [],
+      MEDIUM: [],
+      HIGH: [],
+      URGENT: [],
+    });
   });
 });
 
@@ -52,12 +93,17 @@ describe("filterIssues", () => {
   it("matches title, #number and repo name case-insensitively", () => {
     expect(ids(filterIssues(rows, { ...none, query: "RATE" }))).toEqual(["b"]);
     expect(ids(filterIssues(rows, { ...none, query: "#142" }))).toEqual(["a"]);
-    expect(ids(filterIssues(rows, { ...none, query: "Api-Gateway" }))).toEqual(["b", "c"]);
+    expect(ids(filterIssues(rows, { ...none, query: "Api-Gateway" }))).toEqual([
+      "b",
+      "c",
+    ]);
     expect(filterIssues(rows, { ...none, query: "nothing" })).toEqual([]);
   });
 
   it("filters by repo full name and label exactly", () => {
-    expect(ids(filterIssues(rows, { ...none, repo: "devpulse/infra" }))).toEqual(["d"]);
+    expect(
+      ids(filterIssues(rows, { ...none, repo: "devpulse/infra" })),
+    ).toEqual(["d"]);
     expect(filterIssues(rows, { ...none, repo: "infra" })).toEqual([]);
     expect(ids(filterIssues(rows, { ...none, label: "bug" }))).toEqual(["b"]);
     expect(filterIssues(rows, { ...none, label: "bu" })).toEqual([]);
@@ -75,7 +121,9 @@ describe("moveIssue", () => {
     const before = structuredClone(rows);
     const out = moveIssue(rows, { id: "a", priority: "URGENT" });
     expect(out.find((i) => i.id === "a")?.priority).toBe("URGENT");
-    expect(out.filter((i) => i.id !== "a")).toEqual(rows.filter((i) => i.id !== "a"));
+    expect(out.filter((i) => i.id !== "a")).toEqual(
+      rows.filter((i) => i.id !== "a"),
+    );
     expect(out[1]).toBe(rows[1]); // untouched rows keep identity
     expect(rows).toEqual(before);
     expect(out).not.toBe(rows);
@@ -88,7 +136,13 @@ describe("moveIssue", () => {
 
 describe("collect", () => {
   it("dedupes and sorts labels", () => {
-    expect(collectLabels(rows)).toEqual(["api", "bug", "cleanup", "documentation", "incident"]);
+    expect(collectLabels(rows)).toEqual([
+      "api",
+      "bug",
+      "cleanup",
+      "documentation",
+      "incident",
+    ]);
   });
 
   it("dedupes and sorts repos by name", () => {

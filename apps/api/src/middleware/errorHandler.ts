@@ -19,7 +19,12 @@ function resolve(err: unknown): Resolved {
     return { status: err.status, code: err.code, message: err.message };
   }
   const prisma = mapPrismaError(err);
-  if (prisma) return { status: prisma.status, code: prisma.code, message: prisma.message };
+  if (prisma)
+    return {
+      status: prisma.status,
+      code: prisma.code,
+      message: prisma.message,
+    };
   if (isClientHttpError(err)) {
     return { status: err.status, code: "BAD_REQUEST", message: err.message };
   }

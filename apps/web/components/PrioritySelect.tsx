@@ -139,7 +139,9 @@ export function PrioritySelect({ value, onChange, label }: Props) {
               >
                 <PriorityIcon priority={p} />
                 {PRIORITY_LABEL[p]}
-                {p === value && <CheckIcon width={16} height={16} className="ml-auto" />}
+                {p === value && (
+                  <CheckIcon width={16} height={16} className="ml-auto" />
+                )}
               </li>
             ))}
           </ul>

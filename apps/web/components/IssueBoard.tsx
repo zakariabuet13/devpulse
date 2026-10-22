@@ -14,12 +14,23 @@ import {
   type IssueFilters,
   type MoveAction,
 } from "@/lib/boardLogic";
-import { ChevronDownIcon, CloseIcon, LockIcon, SearchIcon, SwapIcon } from "./icons";
+import {
+  ChevronDownIcon,
+  CloseIcon,
+  LockIcon,
+  SearchIcon,
+  SwapIcon,
+} from "./icons";
 import { IssueList } from "./IssueList";
 import { PriorityColumn } from "./PriorityColumn";
 import { ViewToggle, type IssueView } from "./ViewToggle";
 
-type Props = { issues: BoardIssue[]; repoCount: number; view: IssueView; teamId: string };
+type Props = {
+  issues: BoardIssue[];
+  repoCount: number;
+  view: IssueView;
+  teamId: string;
+};
 
 function FilterSelect({
   value,
@@ -62,13 +73,26 @@ export function IssueBoard({ issues, repoCount, view, teamId }: Props) {
   // Shows moved cards in their new column while the Server Action runs; when the transition
   // ends React drops the optimistic layer, so a failed update reverts on its own.
   // Explicit `<State, Action>`: TS can't infer `Action` from a generic reducer like `moveIssue`.
-  const [optimistic, applyMove] = useOptimistic<BoardIssue[], MoveAction>(issues, moveIssue);
-  const [filters, setFilters] = useState<IssueFilters>({ query: "", repo: "", label: "" });
+  const [optimistic, applyMove] = useOptimistic<BoardIssue[], MoveAction>(
+    issues,
+    moveIssue,
+  );
+  const [filters, setFilters] = useState<IssueFilters>({
+    query: "",
+    repo: "",
+    label: "",
+  });
   const [error, setError] = useState<string | null>(null);
 
   const repos = useMemo(() => collectRepos(issues), [issues]);
-  const labels = useMemo(() => collectLabels(issues).map((l) => [l, l] as [string, string]), [issues]);
-  const visible = useMemo(() => filterIssues(optimistic, filters), [optimistic, filters]);
+  const labels = useMemo(
+    () => collectLabels(issues).map((l) => [l, l] as [string, string]),
+    [issues],
+  );
+  const visible = useMemo(
+    () => filterIssues(optimistic, filters),
+    [optimistic, filters],
+  );
   const columns = useMemo(() => groupByPriority(visible), [visible]);
 
   function onPriorityChange(id: string, priority: Priority) {
@@ -80,7 +104,9 @@ export function IssueBoard({ issues, repoCount, view, teamId }: Props) {
       requestAnimationFrame(() => {
         if (document.activeElement !== document.body) return;
         document
-          .querySelector<HTMLElement>(`[data-issue-id="${id}"] [aria-haspopup="listbox"]`)
+          .querySelector<HTMLElement>(
+            `[data-issue-id="${id}"] [aria-haspopup="listbox"]`,
+          )
           ?.focus();
       });
       const result = await updateIssuePriority(id, priority);
@@ -88,7 +114,8 @@ export function IssueBoard({ issues, repoCount, view, teamId }: Props) {
     });
   }
 
-  const set = (patch: Partial<IssueFilters>) => setFilters((f) => ({ ...f, ...patch }));
+  const set = (patch: Partial<IssueFilters>) =>
+    setFilters((f) => ({ ...f, ...patch }));
   const filtered = visible.length !== optimistic.length;
 
   return (
@@ -127,8 +154,10 @@ export function IssueBoard({ issues, repoCount, view, teamId }: Props) {
           />
         </div>
         <p className="font-mono text-[11px] text-zinc-500" aria-live="polite">
-          {filtered ? `${visible.length} of ${optimistic.length}` : optimistic.length} open{" "}
-          {optimistic.length === 1 ? "issue" : "issues"} · {repoCount}{" "}
+          {filtered
+            ? `${visible.length} of ${optimistic.length}`
+            : optimistic.length}{" "}
+          open {optimistic.length === 1 ? "issue" : "issues"} · {repoCount}{" "}
           {repoCount === 1 ? "repository" : "repositories"}
         </p>
       </div>

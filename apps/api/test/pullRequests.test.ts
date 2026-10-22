@@ -9,7 +9,9 @@ describe("GET /repositories/:id/pull-requests", () => {
     await createPullRequest({ repositoryId: repo.id });
     await createPullRequest(); // other repo
 
-    const res = await request(createApp()).get(`/repositories/${repo.id}/pull-requests`);
+    const res = await request(createApp()).get(
+      `/repositories/${repo.id}/pull-requests`,
+    );
 
     expect(res.status).toBe(200);
     expect(res.body.total).toBe(1);
@@ -19,7 +21,11 @@ describe("GET /repositories/:id/pull-requests", () => {
     const repo = await createRepository();
     await createPullRequest({ repositoryId: repo.id, state: "OPEN" });
     await createPullRequest({ repositoryId: repo.id, state: "CLOSED" });
-    await createPullRequest({ repositoryId: repo.id, state: "MERGED", mergedAt: new Date() });
+    await createPullRequest({
+      repositoryId: repo.id,
+      state: "MERGED",
+      mergedAt: new Date(),
+    });
 
     const res = await request(createApp()).get(
       `/repositories/${repo.id}/pull-requests?state=MERGED`,
@@ -31,13 +37,31 @@ describe("GET /repositories/:id/pull-requests", () => {
     expect(res.body.items[0].mergedAt).not.toBeNull();
   });
 
-  const d =(day: string) => new Date(`2024-01-${day}T00:00:00Z`);
+  const d = (day: string) => new Date(`2024-01-${day}T00:00:00Z`);
 
   async function seedThree() {
     const repo = await createRepository();
-    await createPullRequest({ repositoryId: repo.id, number: 1, state: "MERGED", mergedAt: d("03"), reviewRequestedAt: null });
-    await createPullRequest({ repositoryId: repo.id, number: 2, state: "OPEN", mergedAt: null, reviewRequestedAt: d("01") });
-    await createPullRequest({ repositoryId: repo.id, number: 3, state: "MERGED", mergedAt: d("01"), reviewRequestedAt: d("02") });
+    await createPullRequest({
+      repositoryId: repo.id,
+      number: 1,
+      state: "MERGED",
+      mergedAt: d("03"),
+      reviewRequestedAt: null,
+    });
+    await createPullRequest({
+      repositoryId: repo.id,
+      number: 2,
+      state: "OPEN",
+      mergedAt: null,
+      reviewRequestedAt: d("01"),
+    });
+    await createPullRequest({
+      repositoryId: repo.id,
+      number: 3,
+      state: "MERGED",
+      mergedAt: d("01"),
+      reviewRequestedAt: d("02"),
+    });
     return repo;
   }
 
@@ -45,16 +69,20 @@ describe("GET /repositories/:id/pull-requests", () => {
     const repo = await seedThree();
     const app = createApp();
     const numbers = async (qs: string) =>
-      (await request(app).get(`/repositories/${repo.id}/pull-requests${qs}`)).body.items.map(
-        (p: { number: number }) => p.number,
-      );
+      (
+        await request(app).get(`/repositories/${repo.id}/pull-requests${qs}`)
+      ).body.items.map((p: { number: number }) => p.number);
 
     expect(await numbers("")).toEqual([3, 2, 1]);
     expect(await numbers("?sort=number&order=asc")).toEqual([1, 2, 3]);
     expect(await numbers("?sort=mergedAt&order=asc")).toEqual([3, 1, 2]);
     expect(await numbers("?sort=mergedAt&order=desc")).toEqual([1, 3, 2]);
-    expect(await numbers("?sort=reviewRequestedAt&order=asc")).toEqual([2, 3, 1]);
-    expect(await numbers("?sort=reviewRequestedAt&order=desc")).toEqual([3, 2, 1]);
+    expect(await numbers("?sort=reviewRequestedAt&order=asc")).toEqual([
+      2, 3, 1,
+    ]);
+    expect(await numbers("?sort=reviewRequestedAt&order=desc")).toEqual([
+      3, 2, 1,
+    ]);
   });
 
   it("accepts multiple states and only returns the requested repository's PRs", async () => {
@@ -72,7 +100,11 @@ describe("GET /repositories/:id/pull-requests", () => {
     const repo = await createRepository();
     const same = d("01");
     for (let i = 1; i <= 5; i++) {
-      await createPullRequest({ repositoryId: repo.id, number: i, mergedAt: same });
+      await createPullRequest({
+        repositoryId: repo.id,
+        number: i,
+        mergedAt: same,
+      });
     }
     const app = createApp();
 
@@ -89,20 +121,28 @@ describe("GET /repositories/:id/pull-requests", () => {
     expect(ids).toEqual([...ids].sort());
   });
 
-  it.each([["sort=bogus"], ["order=sideways"], ["state=BOGUS"], ["state="], ["limit=0"], ["offset=-1"]])(
-    "rejects ?%s with a ZodIssue[] body",
-    async (qs) => {
-      const repo = await createRepository();
+  it.each([
+    ["sort=bogus"],
+    ["order=sideways"],
+    ["state=BOGUS"],
+    ["state="],
+    ["limit=0"],
+    ["offset=-1"],
+  ])("rejects ?%s with a ZodIssue[] body", async (qs) => {
+    const repo = await createRepository();
 
-      const res = await request(createApp()).get(`/repositories/${repo.id}/pull-requests?${qs}`);
+    const res = await request(createApp()).get(
+      `/repositories/${repo.id}/pull-requests?${qs}`,
+    );
 
-      expect(res.status).toBe(400);
-      expect(Array.isArray(res.body.error)).toBe(true);
-    },
-  );
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+  });
 
   it("404s for a missing repository with 'Repository not found'", async () => {
-    const res = await request(createApp()).get("/repositories/nope/pull-requests");
+    const res = await request(createApp()).get(
+      "/repositories/nope/pull-requests",
+    );
 
     expect(res.status).toBe(404);
     expect(res.body.error.message).toBe("Repository not found");
@@ -117,9 +157,27 @@ describe("GET /teams/:teamId/pull-requests", () => {
     const team = await createTeam();
     const repoA = await createRepository({ teamId: team.id });
     const repoB = await createRepository({ teamId: team.id });
-    await createPullRequest({ repositoryId: repoA.id, number: 1, state: "MERGED", mergedAt: d("03"), reviewRequestedAt: null });
-    await createPullRequest({ repositoryId: repoB.id, number: 2, state: "OPEN", mergedAt: null, reviewRequestedAt: d("01") });
-    await createPullRequest({ repositoryId: repoA.id, number: 3, state: "MERGED", mergedAt: d("01"), reviewRequestedAt: d("02") });
+    await createPullRequest({
+      repositoryId: repoA.id,
+      number: 1,
+      state: "MERGED",
+      mergedAt: d("03"),
+      reviewRequestedAt: null,
+    });
+    await createPullRequest({
+      repositoryId: repoB.id,
+      number: 2,
+      state: "OPEN",
+      mergedAt: null,
+      reviewRequestedAt: d("01"),
+    });
+    await createPullRequest({
+      repositoryId: repoA.id,
+      number: 3,
+      state: "MERGED",
+      mergedAt: d("01"),
+      reviewRequestedAt: d("02"),
+    });
     return team;
   }
 
@@ -127,17 +185,25 @@ describe("GET /teams/:teamId/pull-requests", () => {
     const team = await seedTeam();
     await createPullRequest(); // other team
 
-    const res = await request(createApp()).get(`/teams/${team.id}/pull-requests`);
+    const res = await request(createApp()).get(
+      `/teams/${team.id}/pull-requests`,
+    );
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ total: 3, limit: expect.any(Number), offset: 0 });
+    expect(res.body).toMatchObject({
+      total: 3,
+      limit: expect.any(Number),
+      offset: 0,
+    });
     expect(res.body.items).toHaveLength(3);
   });
 
   it("returns an empty page for a team without repositories", async () => {
     const team = await createTeam();
 
-    const res = await request(createApp()).get(`/teams/${team.id}/pull-requests`);
+    const res = await request(createApp()).get(
+      `/teams/${team.id}/pull-requests`,
+    );
 
     expect(res.status).toBe(200);
     expect(res.body.items).toEqual([]);
@@ -148,11 +214,17 @@ describe("GET /teams/:teamId/pull-requests", () => {
     const team = await seedTeam();
     const app = createApp();
 
-    const merged = await request(app).get(`/teams/${team.id}/pull-requests?state=MERGED`);
-    const mixed = await request(app).get(`/teams/${team.id}/pull-requests?state=OPEN,MERGED`);
+    const merged = await request(app).get(
+      `/teams/${team.id}/pull-requests?state=MERGED`,
+    );
+    const mixed = await request(app).get(
+      `/teams/${team.id}/pull-requests?state=OPEN,MERGED`,
+    );
 
     expect(merged.body.total).toBe(2);
-    expect(merged.body.items.every((p: { state: string }) => p.state === "MERGED")).toBe(true);
+    expect(
+      merged.body.items.every((p: { state: string }) => p.state === "MERGED"),
+    ).toBe(true);
     expect(mixed.body.total).toBe(3);
   });
 
@@ -160,23 +232,34 @@ describe("GET /teams/:teamId/pull-requests", () => {
     const team = await seedTeam();
     const app = createApp();
     const numbers = async (qs: string) =>
-      (await request(app).get(`/teams/${team.id}/pull-requests${qs}`)).body.items.map(
-        (p: { number: number }) => p.number,
-      );
+      (
+        await request(app).get(`/teams/${team.id}/pull-requests${qs}`)
+      ).body.items.map((p: { number: number }) => p.number);
 
     expect(await numbers("")).toEqual([3, 2, 1]);
     expect(await numbers("?sort=number&order=asc")).toEqual([1, 2, 3]);
     expect(await numbers("?sort=mergedAt&order=asc")).toEqual([3, 1, 2]);
     expect(await numbers("?sort=mergedAt&order=desc")).toEqual([1, 3, 2]);
-    expect(await numbers("?sort=reviewRequestedAt&order=asc")).toEqual([2, 3, 1]);
-    expect(await numbers("?sort=reviewRequestedAt&order=desc")).toEqual([3, 2, 1]);
+    expect(await numbers("?sort=reviewRequestedAt&order=asc")).toEqual([
+      2, 3, 1,
+    ]);
+    expect(await numbers("?sort=reviewRequestedAt&order=desc")).toEqual([
+      3, 2, 1,
+    ]);
   });
 
   it("pages through rows with tied sort keys across repositories without gaps or repeats", async () => {
     const team = await createTeam();
-    const repos = [await createRepository({ teamId: team.id }), await createRepository({ teamId: team.id })];
+    const repos = [
+      await createRepository({ teamId: team.id }),
+      await createRepository({ teamId: team.id }),
+    ];
     for (let i = 1; i <= 5; i++) {
-      await createPullRequest({ repositoryId: repos[i % 2].id, number: i, mergedAt: d("01") });
+      await createPullRequest({
+        repositoryId: repos[i % 2].id,
+        number: i,
+        mergedAt: d("01"),
+      });
     }
     const app = createApp();
 
@@ -193,17 +276,23 @@ describe("GET /teams/:teamId/pull-requests", () => {
     expect(ids).toEqual([...ids].sort());
   });
 
-  it.each([["sort=bogus"], ["order=sideways"], ["state=BOGUS"], ["state="], ["limit=0"], ["offset=-1"]])(
-    "rejects ?%s with a ZodIssue[] body",
-    async (qs) => {
-      const team = await createTeam();
+  it.each([
+    ["sort=bogus"],
+    ["order=sideways"],
+    ["state=BOGUS"],
+    ["state="],
+    ["limit=0"],
+    ["offset=-1"],
+  ])("rejects ?%s with a ZodIssue[] body", async (qs) => {
+    const team = await createTeam();
 
-      const res = await request(createApp()).get(`/teams/${team.id}/pull-requests?${qs}`);
+    const res = await request(createApp()).get(
+      `/teams/${team.id}/pull-requests?${qs}`,
+    );
 
-      expect(res.status).toBe(400);
-      expect(Array.isArray(res.body.error)).toBe(true);
-    },
-  );
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+  });
 
   it("404s for a missing team with 'Team not found'", async () => {
     const res = await request(createApp()).get("/teams/nope/pull-requests");
@@ -226,7 +315,9 @@ describe("/pull-requests/:id", () => {
   it("PATCH has no route (404)", async () => {
     const pr = await createPullRequest();
 
-    const res = await request(createApp()).patch(`/pull-requests/${pr.id}`).send({ title: "x" });
+    const res = await request(createApp())
+      .patch(`/pull-requests/${pr.id}`)
+      .send({ title: "x" });
 
     expect(res.status).toBe(404);
   });
@@ -241,11 +332,16 @@ describe("/pull-requests/:id", () => {
     });
   });
 
-  it.each(["post", "delete"] as const)("%s /pull-requests has no route (404)", async (method) => {
-    const pr = await createPullRequest();
-    const app = createApp();
+  it.each(["post", "delete"] as const)(
+    "%s /pull-requests has no route (404)",
+    async (method) => {
+      const pr = await createPullRequest();
+      const app = createApp();
 
-    expect((await request(app)[method]("/pull-requests")).status).toBe(404);
-    expect((await request(app)[method](`/pull-requests/${pr.id}`)).status).toBe(404);
-  });
+      expect((await request(app)[method]("/pull-requests")).status).toBe(404);
+      expect(
+        (await request(app)[method](`/pull-requests/${pr.id}`)).status,
+      ).toBe(404);
+    },
+  );
 });

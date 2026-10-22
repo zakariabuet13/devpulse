@@ -33,16 +33,24 @@ export function PriorityColumn({ priority, issues, onPriorityChange }: Props) {
           <PriorityIcon priority={priority} />
           {PRIORITY_LABEL[priority]}
         </h2>
-        <span className={`rounded px-2 py-0.5 font-mono text-[11px] ${tone.pill}`}>
+        <span
+          className={`rounded px-2 py-0.5 font-mono text-[11px] ${tone.pill}`}
+        >
           {issues.length}
         </span>
       </header>
       {issues.length === 0 ? (
-        <p className="px-4 py-10 text-center text-[13px] text-zinc-400">No issues</p>
+        <p className="px-4 py-10 text-center text-[13px] text-zinc-400">
+          No issues
+        </p>
       ) : (
         <ul className="flex flex-col gap-3 p-3">
           {issues.map((i) => (
-            <IssueCard key={i.id} issue={i} onPriorityChange={onPriorityChange} />
+            <IssueCard
+              key={i.id}
+              issue={i}
+              onPriorityChange={onPriorityChange}
+            />
           ))}
         </ul>
       )}

@@ -68,4 +68,6 @@ export type ApiError = z.infer<typeof apiErrorSchema>;
 
 // Update bodies: unknown keys -> 400 (strict) and `{}` -> 400 (at least one key).
 export const atLeastOneKey = (o: object) => Object.keys(o).length > 0;
-export const atLeastOneKeyMessage = { message: "At least one field is required" };
+export const atLeastOneKeyMessage = {
+  message: "At least one field is required",
+};

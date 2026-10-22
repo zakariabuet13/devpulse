@@ -79,13 +79,14 @@ describe("pagination validation on every list endpoint", () => {
     "/repositories/x/pull-requests",
   ];
 
-  it.each(lists.flatMap((path) => ["limit=0", "limit=101", "offset=-1"].map((qs) => [path, qs])))(
-    "%s?%s is 400 with a ZodIssue[] body",
-    async (path, qs) => {
-      const res = await request(createApp()).get(`${path}?${qs}`);
+  it.each(
+    lists.flatMap((path) =>
+      ["limit=0", "limit=101", "offset=-1"].map((qs) => [path, qs]),
+    ),
+  )("%s?%s is 400 with a ZodIssue[] body", async (path, qs) => {
+    const res = await request(createApp()).get(`${path}?${qs}`);
 
-      expect(res.status).toBe(400);
-      expect(Array.isArray(res.body.error)).toBe(true);
-    },
-  );
+    expect(res.status).toBe(400);
+    expect(Array.isArray(res.body.error)).toBe(true);
+  });
 });

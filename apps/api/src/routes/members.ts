@@ -50,7 +50,9 @@ membersRouter.post("/teams/:teamId/members", async (req, res) => {
 });
 
 membersRouter.get("/members/:id", async (req, res) => {
-  const member = await prisma.member.findUnique({ where: { id: req.params.id } });
+  const member = await prisma.member.findUnique({
+    where: { id: req.params.id },
+  });
   if (!member) throw new NotFoundError("Member not found");
   res.json(toMemberDto(member));
 });
@@ -58,7 +60,10 @@ membersRouter.get("/members/:id", async (req, res) => {
 membersRouter.patch("/members/:id", async (req, res) => {
   const data = parseInput(updateMemberSchema, req.body);
   const id = req.params.id;
-  const existing = await prisma.member.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.member.findUnique({
+    where: { id },
+    select: { id: true },
+  });
   if (!existing) throw new NotFoundError("Member not found");
   if (data.teamId) await ensureTeam(data.teamId);
   try {
