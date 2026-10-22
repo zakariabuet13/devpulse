@@ -28,7 +28,7 @@ Run from repo root:
 
 ## Workflow
 
-- After a series of edits, run `npm run typecheck`, not the full build.
+- After editing `apps/web`, run `npm run typecheck -w apps/web` (the Stop hook only gates `apps/api` and `packages/shared`).
 
 ## Compact Instructions
 
