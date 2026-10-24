@@ -58,6 +58,7 @@ export {
   updateIssueSchema,
   issueSortSchema,
   issueListQuerySchema,
+  teamIssueListQuerySchema,
   issuePageSchema,
 } from "./issue";
 export type {
@@ -66,6 +67,7 @@ export type {
   Issue,
   UpdateIssue,
   IssueListQuery,
+  TeamIssueListQuery,
 } from "./issue";
 
 export {

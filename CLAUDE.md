@@ -39,3 +39,4 @@ Run from repo root:
 - branches `feat/<slug>`, `fix/<slug>`, or `chore/<slug>`
 - open PRs against `main`
 - squash-merge
+- before opening a PR, have agent-security-reviewer review the branch

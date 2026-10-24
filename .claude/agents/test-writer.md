@@ -1,7 +1,7 @@
 ---
 name: agent-test-writer
-description: "Writes failing Vitest + supertest tests for an apps/api endpoint from its spec, before the implementation exists. Name the trigger: a spec is ready and there are no tests yet.
-tools: Read, Grep, Glob, Edit, Write, Bash"
+description: "Writes failing Vitest + supertest tests for an apps/api endpoint from its spec, before the implementation exists. Name the trigger: a spec is ready and there are no tests yet."
+tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 color: green
 skills: [api-conventions]
