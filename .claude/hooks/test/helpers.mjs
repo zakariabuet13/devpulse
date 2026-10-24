@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 const hooksDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Runs `.claude/hooks/<script>` with `input` as stdin JSON (or a raw string). */
-export function runHook(script, input, { env = {}, cwd } = {}) {
-  const r = spawnSync(process.execPath, [join(hooksDir, script)], {
+export function runHook(script, input, { env = {}, cwd, args = [] } = {}) {
+  const r = spawnSync(process.execPath, [join(hooksDir, script), ...args], {
     input: typeof input === "string" ? input : JSON.stringify(input),
     encoding: "utf8",
     cwd,

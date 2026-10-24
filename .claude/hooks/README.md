@@ -30,3 +30,19 @@ Matcher: N/A
 What it does: if nothing changed under apps/api/ or packages/shared/, or the change fingerprint matches the last green run (stored under scratchpad_dir), it exits 0 straight away. Otherwise it runs npm run typecheck and npm test -w apps/api. Green: store the fingerprint. Red: block with the last ~40 lines of the failure. Postgres unreachable: don't block; tell you to run docker compose up -d. stop_hook_active and still red: warn, don't block. For the same fingerprint, steps that already passed are not re-run, so a retry after docker starts only repeats the tests. Only apps/api and packages/shared are gated; run `npm run typecheck -w apps/web` yourself after web edits. Uses test-gate.mjs.
 What it returns: The blocking reason as JSON `decision: "block"`, exit 0.
 On failure: Fails open: a crash of the hook itself (not a git repo, bad DEVPULSE_GATE_COMMANDS, cache write error) means exit 0. Opposite of the guard, because a Stop hook that can't run must not trap the session.
+
+# Agent Fences
+
+## Whitelists the safe commands to run from an agent
+Event: PreToolUse
+Matcher: Bash|PowerShell
+What it does: Allows exactly one plain command: any of `;` `&` `|` `<` `>`, backticks, `$`, quotes (`"` `'`), control characters or newlines denies it. Profile `review` allows `git` with a read-only subcommand: `diff`, `log`, `show`, `status`, `grep`, `ls-files`, `blame`, `rev-parse`, `merge-base`. Profile `test` allows that set plus `npm test -w apps/api` with optional arguments. Everything else: exit 2 with a reason that names the profile. Use `agent-shell.mjs <profile>`
+What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
+On failure: Fails closed: a crash, unknown profile or missing command denies the call. Git options that can write a file or run a program are denied: every `--o*` except `--oneline` (git accepts unique prefixes, so `--out=x` is `--output=x`), every `--ext*` (`--ext-diff`) and `-O` / `--open-files-in-pager`, including inside a short cluster like `-nO`.
+
+## Allows to write test only in the apps/api/test folder or it's memory files
+Event: PreToolUse
+Matcher: Edit|Write
+What it does: Allows a path, after resolving it, only under `apps/api/test/` or the agent's own memory folder. Without the second part, `memory: project` breaks silently. Everything else: exit 2. Uses `tests-only.mjs`
+What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
+On failure: Fails close.

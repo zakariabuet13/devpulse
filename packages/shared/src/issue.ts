@@ -51,4 +51,11 @@ export const issueListQuerySchema = paginationQuerySchema.extend({
 
 export type IssueListQuery = z.infer<typeof issueListQuerySchema>;
 
+// Team-wide list adds a title search; trim runs before min/max, so "   " is rejected.
+export const teamIssueListQuerySchema = issueListQuerySchema.extend({
+  q: z.string().trim().min(1).max(100).optional(),
+});
+
+export type TeamIssueListQuery = z.infer<typeof teamIssueListQuerySchema>;
+
 export const issuePageSchema = paginated(issueSchema);
