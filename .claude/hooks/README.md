@@ -15,6 +15,7 @@ Matcher: Edit|Write|Bash|PowerShell
 What it does: Denies Edit/Write to a file under apps/api/prisma/migrations/ that exists in HEAD, with a reason that says how to make a new migration. Allows untracked and staged-only (not yet committed) ones. The path is resolved first, so `..` segments and backslashes don't dodge it. Denies any shell command whose text mentions .env other than .env.example, with a reason pointing to the CLAUDE.md line. Uses guard.mjs.
 What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
 On failure: Blocks (fails closed): any crash or unreadable git state denies the call, and `onFailure: "block"` covers a script that cannot start.
+Limits: the .env check is a text match, best effort. `cat apps/api/.e""nv` or a wildcard like `.en*` gets past it. The real wall is the `Read(.env)` deny rule in settings.json; this hook only closes the obvious shell routes.
 
 ## No UTF-8 BOM in any changed file; No committed migration modified by any route
 Event: Stop
@@ -35,9 +36,9 @@ On failure: Fails open: a crash of the hook itself (not a git repo, bad DEVPULSE
 ## Whitelists the safe commands to run from an agent
 Event: PreToolUse
 Matcher: Bash|PowerShell
-What it does: Allows exactly one command: no `;` `&` `|` `<` `>`, backticks or `$(`. Profile `review` allows `git` with a read-only subcommand: `diff`, `log`, `show`, `status`, `grep`, `ls-files`, `blame`, `rev-parse`, `merge-base`. Profile `test` allows that set plus `npm test -w apps/api` with optional arguments. Everything else: exit 2 with a reason that names the profile. Use `agent-shell.mjs <profile>`
+What it does: Allows exactly one plain command: any of `;` `&` `|` `<` `>`, backticks, `$`, quotes (`"` `'`), control characters or newlines denies it. Profile `review` allows `git` with a read-only subcommand: `diff`, `log`, `show`, `status`, `grep`, `ls-files`, `blame`, `rev-parse`, `merge-base`. Profile `test` allows that set plus `npm test -w apps/api` with optional arguments. Everything else: exit 2 with a reason that names the profile. Use `agent-shell.mjs <profile>`
 What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
-On failure: Fails close. Find the one git option that makes `git diff` and `git log` write a file, and deny it.
+On failure: Fails closed: a crash, unknown profile or missing command denies the call. Git options that can write a file or run a program are denied: every `--o*` except `--oneline` (git accepts unique prefixes, so `--out=x` is `--output=x`), every `--ext*` (`--ext-diff`) and `-O` / `--open-files-in-pager`, including inside a short cluster like `-nO`.
 
 ## Allows to write test only in the apps/api/test folder or it's memory files
 Event: PreToolUse
