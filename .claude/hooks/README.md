@@ -15,7 +15,6 @@ Matcher: Edit|Write|Bash|PowerShell
 What it does: Denies Edit/Write to a file under apps/api/prisma/migrations/ that exists in HEAD, with a reason that says how to make a new migration. Allows untracked and staged-only (not yet committed) ones. The path is resolved first, so `..` segments and backslashes don't dodge it. Denies any shell command whose text mentions .env other than .env.example, with a reason pointing to the CLAUDE.md line. Uses guard.mjs.
 What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
 On failure: Blocks (fails closed): any crash or unreadable git state denies the call, and `onFailure: "block"` covers a script that cannot start.
-Limits: the .env check is a text match, best effort. `cat apps/api/.e""nv` or a wildcard like `.en*` gets past it. The real wall is the `Read(.env)` deny rule in settings.json; this hook only closes the obvious shell routes.
 
 ## No UTF-8 BOM in any changed file; No committed migration modified by any route
 Event: Stop
@@ -30,3 +29,19 @@ Matcher: N/A
 What it does: if nothing changed under apps/api/ or packages/shared/, or the change fingerprint matches the last green run (stored under scratchpad_dir), it exits 0 straight away. Otherwise it runs npm run typecheck and npm test -w apps/api. Green: store the fingerprint. Red: block with the last ~40 lines of the failure. Postgres unreachable: don't block; tell you to run docker compose up -d. stop_hook_active and still red: warn, don't block. For the same fingerprint, steps that already passed are not re-run, so a retry after docker starts only repeats the tests. Only apps/api and packages/shared are gated; run `npm run typecheck -w apps/web` yourself after web edits. Uses test-gate.mjs.
 What it returns: The blocking reason as JSON `decision: "block"`, exit 0.
 On failure: Fails open: a crash of the hook itself (not a git repo, bad DEVPULSE_GATE_COMMANDS, cache write error) means exit 0. Opposite of the guard, because a Stop hook that can't run must not trap the session.
+
+# Agent Fences
+
+## Whitelists the safe commands to run from an agent
+Event: PreToolUse
+Matcher: Bash|PowerShell
+What it does: Allows exactly one command: no `;` `&` `|` `<` `>`, backticks or `$(`. Profile `review` allows `git` with a read-only subcommand: `diff`, `log`, `show`, `status`, `grep`, `ls-files`, `blame`, `rev-parse`, `merge-base`. Profile `test` allows that set plus `npm test -w apps/api` with optional arguments. Everything else: exit 2 with a reason that names the profile. Use `agent-shell.mjs <profile>`
+What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
+On failure: Fails close. Find the one git option that makes `git diff` and `git log` write a file, and deny it.
+
+## Allows to write test only in the apps/api/test folder or it's memory files
+Event: PreToolUse
+Matcher: Edit|Write
+What it does: Allows a path, after resolving it, only under `apps/api/test/` or the agent's own memory folder. Without the second part, `memory: project` breaks silently. Everything else: exit 2. Uses `tests-only.mjs`
+What it returns: Exits 2 with the reason on stderr (stdout JSON is ignored on exit 2, so none is printed).
+On failure: Fails close.
