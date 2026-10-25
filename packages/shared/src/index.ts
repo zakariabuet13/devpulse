@@ -78,3 +78,6 @@ export {
   pullRequestPageSchema,
 } from "./pullRequest";
 export type { PrState, PullRequest, PullRequestListQuery } from "./pullRequest";
+
+export { syncResultSchema } from "./sync";
+export type { SyncResult } from "./sync";

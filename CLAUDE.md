@@ -8,7 +8,7 @@ Run from repo root:
 - `npm run db:reset -w apps/api` - wipes the DB, re-runs migrations and seed
 - `npm test -w apps/api` - Vitest + supertest on `createApp()` against real Postgres `devpulse_test` (globalSetup creates + `migrate deploy`s it; needs `docker compose up -d`); all tables truncated before each test; files run serially. Factories in `apps/api/test/factories.ts`.
 - `docker compose up -d` - starts the Postgres DB in docker
-- api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`)
+- api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`), `GITHUB_TOKEN`
 
 ## Architecture
 
@@ -29,6 +29,7 @@ Run from repo root:
 ## Workflow
 
 - After editing `apps/web`, run `npm run typecheck -w apps/web` (the Stop hook only gates `apps/api` and `packages/shared`).
+- use `gh` for raw GitHub JSON; the github MCP server is read-only
 
 ## Compact Instructions
 
