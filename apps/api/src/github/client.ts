@@ -1,5 +1,6 @@
 import {
   GitHubError,
+  GitHubNotConfiguredError,
   GitHubNotFoundError,
   GitHubPageLimitError,
   type GhIssue,
@@ -33,6 +34,18 @@ interface RawPull {
   merged_at: string | null;
 }
 
+// Names come from the DB and are spliced into URL paths: anything that isn't
+// `owner/repo` (e.g. `a/../../user`) could reach another endpoint with our token.
+// Such a name can't exist on GitHub, so it counts as not found.
+const FULL_NAME = /^[\w.-]+\/[\w.-]+$/;
+function assertRepoName(fullName: string): void {
+  if (
+    !FULL_NAME.test(fullName) ||
+    fullName.split("/").some((p) => /^\.+$/.test(p))
+  )
+    throw new GitHubNotFoundError();
+}
+
 // Repo ids are far below 2^53, so BigInt(number) from parsed JSON is exact.
 export function createGitHubClient({
   token,
@@ -40,7 +53,7 @@ export function createGitHubClient({
   token: string | undefined;
 }): GitHubClient {
   async function request(url: string): Promise<Response> {
-    if (!token) throw new Error("GITHUB_TOKEN is not configured");
+    if (!token) throw new GitHubNotConfiguredError();
     // Never send the token off-host (e.g. via a hostile `Link: rel="next"`).
     if (new URL(url).origin !== API) throw new GitHubError(502);
     const res = await fetch(url, {
@@ -76,6 +89,7 @@ export function createGitHubClient({
 
   return {
     async getRepo(fullName) {
+      assertRepoName(fullName);
       const res = await request(`${API}/repos/${fullName}`);
       return toRepo((await res.json()) as RawRepo);
     },
@@ -84,6 +98,7 @@ export function createGitHubClient({
       return toRepo((await res.json()) as RawRepo);
     },
     async listIssues(fullName): Promise<GhIssue[]> {
+      assertRepoName(fullName);
       const raw = await getAll<RawIssue>(`/repos/${fullName}/issues?state=all`);
       return raw.map((i) => ({
         number: i.number,
@@ -97,6 +112,7 @@ export function createGitHubClient({
       }));
     },
     async listPulls(fullName): Promise<GhPull[]> {
+      assertRepoName(fullName);
       const raw = await getAll<RawPull>(`/repos/${fullName}/pulls?state=all`);
       return raw.map((p) => ({
         number: p.number,

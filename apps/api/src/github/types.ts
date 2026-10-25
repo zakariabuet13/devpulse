@@ -35,6 +35,14 @@ export class GitHubNotFoundError extends Error {
   }
 }
 
+// A server misconfiguration, not a per-repo failure: the sync aborts with 503.
+export class GitHubNotConfiguredError extends Error {
+  constructor() {
+    super("GITHUB_TOKEN is not configured");
+    this.name = "GitHubNotConfiguredError";
+  }
+}
+
 // Thrown instead of truncating: a partial fetch would make the sync delete rows.
 export class GitHubPageLimitError extends Error {
   constructor() {

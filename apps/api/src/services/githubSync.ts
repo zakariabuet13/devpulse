@@ -1,7 +1,11 @@
 import type { SyncResult } from "@devpulse/shared";
 import { prisma } from "../db";
-import { ConflictError } from "../errors";
-import { GitHubNotFoundError, type GitHubClient } from "../github/types";
+import { AppError, ConflictError } from "../errors";
+import {
+  GitHubNotConfiguredError,
+  GitHubNotFoundError,
+  type GitHubClient,
+} from "../github/types";
 import { ensureTeam } from "../lib/guards";
 import { logger } from "../logger";
 
@@ -42,6 +46,9 @@ async function runSync(
     try {
       result.repositories.push(await syncRepository(repo, github));
     } catch (e) {
+      // Every repo would fail the same way: abort instead of reporting N errors.
+      if (e instanceof GitHubNotConfiguredError)
+        throw new AppError(503, "INTERNAL", "GitHub sync is not configured");
       if (e instanceof GitHubNotFoundError) {
         result.skipped.push({ ...ref, reason: "NOT_FOUND" });
       } else {

@@ -515,6 +515,21 @@ describe("POST /teams/:teamId/sync", () => {
   });
 
   describe("GitHub failures", () => {
+    it("503s when the GitHub token is not configured, instead of a 200 full of errors", async () => {
+      const typesPath = "../src/github/types";
+      const { GitHubNotConfiguredError } = await import(typesPath);
+      const { team } = await teamWithRepo();
+      const { client } = fakeGithub();
+      client.getRepo.mockRejectedValue(new GitHubNotConfiguredError());
+
+      const res = await sync(team.id, client);
+
+      expect(res.status).toBe(503);
+      expect(res.body.error).toMatchObject({
+        message: "GitHub sync is not configured",
+      });
+    });
+
     it("skips a repo GitHub answers 404 for and reports it", async () => {
       // The 404 signal is GitHubNotFoundError from src/github/types (PLAN section 3).
       // Path held in a variable so tsc doesn't resolve the not-yet-existing module.
