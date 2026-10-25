@@ -47,6 +47,7 @@ model Member {
 model Repository {
   id             String        @id @default(uuid())
   githubFullName String        @unique @db.Citext
+  githubId       BigInt?       @unique
   teamId        String
   team           Team          @relation(fields: [teamId], references: [id], onDelete: Restrict)
   issues         Issue[]
