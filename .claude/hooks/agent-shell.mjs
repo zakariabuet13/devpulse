@@ -66,14 +66,14 @@ try {
     exe === "npm" &&
     sub === "test" &&
     rest[0] === "-w" &&
-    rest[1] === "apps/api"
+    (rest[1] === "apps/api" || rest[1] === "apps/mcp")
   ) {
     process.exit(0);
   }
 
   const allowed =
     profile === "test"
-      ? "read-only git (diff, log, show, status, grep, ls-files, blame, rev-parse, merge-base) and `npm test -w apps/api`"
+      ? "read-only git (diff, log, show, status, grep, ls-files, blame, rev-parse, merge-base) and `npm test -w apps/api` / `npm test -w apps/mcp`"
       : "read-only git (diff, log, show, status, grep, ls-files, blame, rev-parse, merge-base)";
   deny(profile, `\`${command.trim()}\` is not allowed. Allowed: ${allowed}.`);
 } catch (err) {

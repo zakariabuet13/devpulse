@@ -62,6 +62,15 @@ for (const tool of ["Edit", "Write"]) {
     );
   });
 
+  test(`${tool} allows apps/mcp/test but not other mcp files`, () => {
+    assertAllowed(hook(pre(tool, join(repo, "apps/mcp/test/server.test.ts"))));
+    assertAllowed(hook(pre(tool, "apps\\mcp\\test\\new\\x.test.ts")));
+    assertDenied(hook(pre(tool, join(repo, "apps/mcp/src/server.ts"))));
+    assertDenied(hook(pre(tool, join(repo, "apps/mcp/test"))));
+    assertDenied(hook(pre(tool, join(repo, "apps/mcp/test-utils/x.ts"))));
+    assertDenied(hook(pre(tool, "apps/mcp/test/../src/server.ts")));
+  });
+
   test(`${tool} allows .. that stays inside the folder`, () => {
     assertAllowed(
       hook(pre(tool, `${repo}/apps/api/test/sub/../teams.test.ts`)),

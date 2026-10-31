@@ -1,4 +1,4 @@
-// PreToolUse (Edit|Write): an agent may write only under apps/api/test/ or its own memory folder. Fails closed.
+// PreToolUse (Edit|Write): an agent may write only under apps/api/test/, apps/mcp/test/, or its own memory folder. Fails closed.
 import { existsSync, realpathSync } from "node:fs";
 import {
   basename,
@@ -11,7 +11,11 @@ import {
 import { readInput, repoRoot, toSlashes } from "./lib.mjs";
 
 // Relative to the repo root. `memory: project` on test-writer stores notes in the second one.
-const ALLOWED_DIRS = ["apps/api/test", ".claude/agent-memory/test-writer"];
+const ALLOWED_DIRS = [
+  "apps/api/test",
+  "apps/mcp/test",
+  ".claude/agent-memory/test-writer",
+];
 
 // Exit 2 + stderr is the whole contract: Claude Code ignores stdout JSON on exit 2.
 function deny(reason) {
@@ -51,7 +55,7 @@ try {
   if (!ALLOWED_DIRS.some((d) => isInside(resolve(root, d), abs))) {
     deny(
       `${toSlashes(raw)} is outside what this agent may write. ` +
-        `Only apps/api/test/ and .claude/agent-memory/test-writer/ are allowed; ` +
+        `Only apps/api/test/, apps/mcp/test/, and .claude/agent-memory/test-writer/ are allowed; ` +
         `source, shared, prisma and config changes belong to the implementer.`,
     );
   }
