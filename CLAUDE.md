@@ -7,6 +7,7 @@ Run from repo root:
 - `npm run db:seed -w apps/api` - deletes PRs, issues, repos, members, teams in that order (team FKs are Restrict, no cascade), then re-creates the sample data
 - `npm run db:reset -w apps/api` - wipes the DB, re-runs migrations and seed
 - `npm test -w apps/api` - Vitest + supertest on `createApp()` against real Postgres `devpulse_test` (globalSetup creates + `migrate deploy`s it; needs `docker compose up -d`); all tables truncated before each test; files run serially. Factories in `apps/api/test/factories.ts`.
+- `npm test -w apps/mcp` - Vitest against the `devpulse` MCP server; needs the API server running. 
 - `docker compose up -d` - starts the Postgres DB in docker
 - api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`), `GITHUB_TOKEN`
 

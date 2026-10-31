@@ -103,6 +103,11 @@ test("review denies npm test, test allows it", () => {
   assertAllowed(run("test", "PowerShell", "npm test -w apps/api"));
 });
 
+test("test allows npm test -w apps/mcp, review denies it", () => {
+  assertAllowed(run("test", "Bash", "npm test -w apps/mcp"));
+  assertDenied(run("review", "Bash", "npm test -w apps/mcp"), /\breview\b/);
+});
+
 test("test allows npm test with arguments", () => {
   assertAllowed(
     run("test", "Bash", "npm test -w apps/api -- test/teams.test.ts"),

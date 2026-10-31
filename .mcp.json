@@ -4,6 +4,14 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/readonly",
       "headers": { "Authorization": "Bearer ${DEVPULSE_GITHUB_PAT}" }
+    },
+    "devpulse": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "apps/mcp/src/index.ts"],
+      "env": {
+        "DEVPULSE_API_URL": "${DEVPULSE_API_URL:-http://localhost:4000}"
+      }
     }
   }
 }
