@@ -12,6 +12,8 @@ export default defineConfig({
       DATABASE_URL:
         "postgresql://postgres:postgres@localhost:5435/devpulse_test?schema=public",
       LOG_LEVEL: "silent",
+      // Tests never reach the network; an empty key means "AI triage is not configured".
+      ANTHROPIC_API_KEY: "",
       DOTENV_CONFIG_QUIET: "true",
     },
   },

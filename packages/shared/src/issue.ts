@@ -19,6 +19,7 @@ export const issueSchema = z.object({
   repositoryId: z.string(),
   number: z.number().int(),
   title: z.string(),
+  body: z.string().nullable(),
   state: issueStateSchema,
   labels: z.array(z.string()),
   priority: prioritySchema,

@@ -112,7 +112,7 @@ export function createServer({ api }: { api: DevPulseApi }): McpServer {
           ...page,
           // Drop internal / noisy fields before they reach the model.
           items: page.items.map(
-            ({ aiSummary: _a, repositoryId: _r, ...rest }) => rest,
+            ({ aiSummary: _a, body: _b, repositoryId: _r, ...rest }) => rest,
           ),
         };
       }),

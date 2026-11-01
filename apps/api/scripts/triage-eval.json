@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Crash on empty payload",
+    "body": "",
+    "priority": "URGENT",
+    "labels": "['bug']"
+  },
+  {
+    "title": "Add rate limiting",
+    "body": "",
+    "priority": "HIGH",
+    "labels": "['enhancement']"
+  },
+  {
+    "title": "Dark mode contrast",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['ui']"
+  },
+  {
+    "title": "Team page 404",
+    "body": "",
+    "priority": "URGENT",
+    "labels": "['bug']"
+  },
+  {
+    "title": "Latency spike on \/v1\/search",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['bug']"
+  },
+  {
+    "title": "Support HTTP\/2 upstreams",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['feature']"
+  },
+  {
+    "title": "Drift in staging VPC",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['bug', 'infrastructure']"
+  },
+  {
+    "title": "Refresh token race condition",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['bug', 'authentication']"
+  },
+  {
+    "title": "Windows path handling",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['bug']"
+  },
+  {
+    "title": "Dead-letter queue alerting",
+    "body": "",
+    "priority": "MEDIUM",
+    "labels": "['bug']"
+  }
+]

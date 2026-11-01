@@ -9,7 +9,7 @@ Run from repo root:
 - `npm test -w apps/api` - Vitest + supertest on `createApp()` against real Postgres `devpulse_test` (globalSetup creates + `migrate deploy`s it; needs `docker compose up -d`); all tables truncated before each test; files run serially. Factories in `apps/api/test/factories.ts`.
 - `npm test -w apps/mcp` - Vitest against the `devpulse` MCP server; needs the API server running. 
 - `docker compose up -d` - starts the Postgres DB in docker
-- api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`), `GITHUB_TOKEN`
+- api env (`apps/api/.env.example`): `DATABASE_URL`, `WEB_ORIGIN` (CORS origin, default `http://localhost:3000`), `LOG_LEVEL` (pino, default `info`), `GITHUB_TOKEN`, `ANTHROPIC_API_KEY`
 
 ## Architecture
 
@@ -26,6 +26,7 @@ Run from repo root:
 - Postgres runs on 5435, not the default 5432
 - Case-insensitive uniqueness of `githubLogin` / `githubFullName` is enforced by the DB: both columns are `@db.Citext` (migration `citext_github_names` creates the extension), so the `@unique` index is case-insensitive and violations surface as P2002 -> 409. No app-level pre-check; stored casing is kept as given.
 - Claude can't read `.env` (team settings deny it): add new env vars to `apps/api/.env.example` and ask the user to copy them into `.env`.
+- `paid-*` scripts spend API credit: ask the user to run them with `!`
 
 ## Workflow
 

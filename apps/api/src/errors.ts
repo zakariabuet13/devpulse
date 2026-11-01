@@ -25,6 +25,18 @@ export class ConflictError extends AppError {
   }
 }
 
+export class BadGatewayError extends AppError {
+  constructor(message = "Bad gateway") {
+    super(502, "BAD_GATEWAY", message);
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message = "Service unavailable") {
+    super(503, "SERVICE_UNAVAILABLE", message);
+  }
+}
+
 export class ValidationError extends AppError {
   constructor(readonly issues: z.core.$ZodIssue[]) {
     super(400, "VALIDATION", "Validation failed");

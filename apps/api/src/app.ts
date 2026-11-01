@@ -3,6 +3,9 @@ import cors from "cors";
 import express from "express";
 import { pinoHttp } from "pino-http";
 import { healthSchema } from "@devpulse/shared";
+import { createTriagerFromEnv } from "./ai/claudeTriager";
+import type { Triager } from "./ai/triager";
+import { createTriageRouter } from "./routes/triage";
 import { createGitHubClient } from "./github/client";
 import type { GitHubClient } from "./github/types";
 import { errorHandler } from "./middleware/errorHandler";
@@ -15,7 +18,13 @@ import { repositoriesRouter } from "./routes/repositories";
 import { createSyncRouter } from "./routes/sync";
 import { teamsRouter } from "./routes/teams";
 
-export function createApp({ github }: { github?: GitHubClient } = {}) {
+export function createApp({
+  github,
+  triager,
+}: { github?: GitHubClient; triager?: Triager } = {}) {
+  // Built lazily from env on first use unless injected (tests inject a fake).
+  let envTriager: Triager | undefined;
+  const getTriager = () => (envTriager ??= triager ?? createTriagerFromEnv());
   const client =
     github ?? createGitHubClient({ token: process.env.GITHUB_TOKEN });
   const app = express();
@@ -49,6 +58,7 @@ export function createApp({ github }: { github?: GitHubClient } = {}) {
   app.use(repositoriesRouter);
   app.use(issuesRouter);
   app.use(pullRequestsRouter);
+  app.use(createTriageRouter(getTriager));
   app.use(createSyncRouter(client));
 
   app.use(notFound);

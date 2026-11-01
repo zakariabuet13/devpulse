@@ -49,6 +49,8 @@ export const errorCodeSchema = z.enum([
   "BAD_REQUEST",
   "NOT_FOUND",
   "CONFLICT",
+  "BAD_GATEWAY",
+  "SERVICE_UNAVAILABLE",
   "INTERNAL",
 ]);
 
