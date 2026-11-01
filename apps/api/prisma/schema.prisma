@@ -62,6 +62,7 @@ model Issue {
   repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   number          Int
   title           String
+  body            String?
   state           IssueState
   labels          String[]
   priority        Priority   @default(MEDIUM)

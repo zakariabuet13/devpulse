@@ -6,6 +6,7 @@ export interface GhRepo {
 export interface GhIssue {
   number: number;
   title: string;
+  body?: string | null;
   state: "open" | "closed";
   labels: string[];
   createdAt: Date;

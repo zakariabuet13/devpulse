@@ -21,6 +21,11 @@ export function IssueCard({ issue, onPriorityChange }: Props) {
       <h3 className="mt-1 min-h-[34px] text-[13px] font-medium leading-[17px] text-zinc-900">
         {issue.title}
       </h3>
+      {issue.body && (
+        <p className="mt-1.5 line-clamp-2 text-[11px] leading-[15px] text-zinc-500">
+          {issue.body}
+        </p>
+      )}
       {issue.labels.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {issue.labels.map((l) => (

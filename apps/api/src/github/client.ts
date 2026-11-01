@@ -21,6 +21,7 @@ interface RawRepo {
 interface RawIssue {
   number: number;
   title: string;
+  body?: string | null;
   state: "open" | "closed";
   labels: Array<string | { name?: string }>;
   created_at: string;
@@ -103,6 +104,7 @@ export function createGitHubClient({
       return raw.map((i) => ({
         number: i.number,
         title: i.title,
+        body: i.body ?? null,
         state: i.state,
         labels: i.labels.flatMap((l) =>
           typeof l === "string" ? [l] : l.name ? [l.name] : [],

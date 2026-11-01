@@ -116,6 +116,7 @@ async function syncRepository(
       for (const i of issues) {
         const fields = {
           title: i.title,
+          body: i.body ?? null,
           state: i.state === "open" ? ("OPEN" as const) : ("CLOSED" as const),
           labels: i.labels,
           githubCreatedAt: i.createdAt,

@@ -79,5 +79,8 @@ export {
 } from "./pullRequest";
 export type { PrState, PullRequest, PullRequestListQuery } from "./pullRequest";
 
+export { triageLabelSchema, triageResultSchema } from "./triage";
+export type { TriageLabel, TriageResult } from "./triage";
+
 export { syncResultSchema } from "./sync";
 export type { SyncResult } from "./sync";
