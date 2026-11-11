@@ -12,3 +12,4 @@ paths: ["apps/api/**"]
   - Validation: `400 { error: ZodIssue[] }` in every env.
   - Everything else: prod `{ error: "<message>" }`; dev `{ error: { code, message, stack } }` (`NODE_ENV`). Codes: `BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, `INTERNAL` (500 message is always "Internal server error").
 - api `lint` is just `tsc --noEmit` (no ESLint there)
+- Endpoints that stream data must use **NDJSON (newline-delimited JSON)** over `application/x-ndjson`, sending one JSON object per line (`\n`).

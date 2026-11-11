@@ -82,5 +82,16 @@ export type { PrState, PullRequest, PullRequestListQuery } from "./pullRequest";
 export { triageLabelSchema, triageResultSchema } from "./triage";
 export type { TriageLabel, TriageResult } from "./triage";
 
+export {
+  MAX_QUESTION_CHARS,
+  MAX_HISTORY_TURNS,
+  chatMessageSchema,
+  chatRequestSchema,
+  assistantEventSchema,
+} from "./assistant";
+export type { ChatMessage, ChatRequest, AssistantEvent } from "./assistant";
+
+export { STALE_THRESHOLD_MS, getStalePrs } from "./stalePrs";
+
 export { syncResultSchema } from "./sync";
 export type { SyncResult } from "./sync";

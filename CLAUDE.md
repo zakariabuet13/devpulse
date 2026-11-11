@@ -15,6 +15,7 @@ Run from repo root:
 
 - `apps/api`: Request bodies are validated with zod schemas from `packages/shared`.
   - Lists return `Page<T>` (`{ items, total, limit, offset }`), pagination via `limit`/`offset` query.
+  - Chat assistant tools are read-only; a tool that writes needs a human confirm step.
 - `apps/web`: Never imports from `apps/api`; shared code goes in packages/shared.
 - `packages/shared`: Ships **TypeScript source, no build step** (`main`/`exports` → `src/index.ts`). Consumers must transpile it:
   - web: `transpilePackages: ["@devpulse/shared"]` in `next.config.ts`

@@ -3,26 +3,9 @@ import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClaudeTriager } from "../src/ai/claudeTriager";
 import { TRIAGE_CONFIG } from "../src/ai/config";
+import { RATES, costOf } from "./rates";
 
 // PAID: real API calls. Run via `npm run paid-triage-smoke` / `paid-triage-eval -- <model>`.
-// Rates are USD per million tokens (<=100K-token prompts). Cache read = 0.1x input, 5m cache write = 1.25x input.
-const RATES: Record<
-  string,
-  { input: number; output: number; cacheRead: number; cacheWrite: number }
-> = {
-  "claude-haiku-5-5": {
-    input: 0.1,
-    output: 0.5,
-    cacheRead: 0.01,
-    cacheWrite: 0.125,
-  },
-  "claude-sonnet-5-5": {
-    input: 2,
-    output: 10,
-    cacheRead: 0.2,
-    cacheWrite: 2.5,
-  },
-};
 
 const SAMPLES = [
   {
@@ -140,11 +123,6 @@ if (mode === "smoke") {
   if (failed) console.log(`failed calls: ${failed}`);
 }
 
-const cost =
-  (totals.input * rate.input +
-    totals.output * rate.output +
-    totals.cacheRead * rate.cacheRead +
-    totals.cacheWrite * rate.cacheWrite) /
-  1_000_000;
+const cost = costOf(totals, rate);
 console.log("usage", totals);
 console.log(`estimated cost: $${cost.toFixed(5)}`);
