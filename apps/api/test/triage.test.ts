@@ -229,7 +229,7 @@ describe("createClaudeTriager", () => {
     ).resolves.toEqual(result);
   });
 
-  it("sends model, max_tokens, effort, structured output and top-level cache_control", async () => {
+  it("sends model, max_tokens, effort, structured output and cache_control on the system block", async () => {
     const { triager, calls } = await makeTriager(() => messageResponse());
     await triager.triage({ title: "t", body: "b" });
 
@@ -242,8 +242,9 @@ describe("createClaudeTriager", () => {
         effort: "low",
         format: { type: "json_schema" },
       },
-      cache_control: { type: "ephemeral" },
+      system: [{ type: "text", cache_control: { type: "ephemeral" } }],
     });
+    expect(calls[0].body).not.toHaveProperty("cache_control");
   });
 
   it("puts title and body in the user message, wrapped as data", async () => {

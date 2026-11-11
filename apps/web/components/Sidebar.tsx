@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  CommentIcon,
   DashboardIcon,
   FolderIcon,
   HelpIcon,
@@ -33,6 +34,7 @@ export function Sidebar() {
         <NavLink href="/" icon={<DashboardIcon />} label="Team Health" />
         <NavLink href="/issues" icon={<IssueIcon />} label="Issues" />
         <NavLink href="/members" icon={<UsersIcon />} label="Members" />
+        <NavLink href="/ask" icon={<CommentIcon />} label="Ask" />
         <Item icon={<PullRequestIcon />} label="Pull Requests" />
         <Item icon={<FolderIcon />} label="Repositories" />
       </nav>

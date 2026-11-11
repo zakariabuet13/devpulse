@@ -15,8 +15,10 @@
     "db:reset": "prisma migrate reset",
     "test": "vitest run",
     "triage-count-tokens": "tsx scripts/countTriageTokens.ts",
+    "assistant-count-tokens": "tsx scripts/countAssistantTokens.ts",
     "paid-triage-smoke": "tsx scripts/paidTriage.ts smoke",
-    "paid-triage-eval": "tsx scripts/paidTriage.ts eval"
+    "paid-triage-eval": "tsx scripts/paidTriage.ts eval",
+    "paid-ask-smoke": "tsx scripts/paidAsk.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

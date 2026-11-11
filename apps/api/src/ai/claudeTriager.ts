@@ -33,8 +33,13 @@ export function createClaudeTriager({
           {
             model,
             max_tokens: TRIAGE_CONFIG.maxTokens,
-            system: SYSTEM_PROMPT,
-            cache_control: { type: "ephemeral" },
+            system: [
+              {
+                type: "text",
+                text: SYSTEM_PROMPT,
+                cache_control: { type: "ephemeral" },
+              },
+            ],
             output_config: {
               effort: TRIAGE_CONFIG.effort,
               format: zodOutputFormat(triageResultSchema),

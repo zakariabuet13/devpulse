@@ -1,7 +1,7 @@
 import { paginated } from "@devpulse/shared";
 import type { z } from "zod";
 
-const API_URL = process.env.API_URL ?? "http://localhost:4000";
+export const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 // Error body is `{ error: ZodIssue[] }` | `{ error: string }` | `{ error: { message } }`.
 function errorMessage(body: unknown, status: number): string {
