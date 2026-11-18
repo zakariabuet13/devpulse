@@ -46,12 +46,22 @@ describe("render", () => {
     ]);
   });
 
-  it("every bullet line carries a (#n)", () => {
+  it("every bullet line with a PR carries a (#n)", () => {
     for (const l of render("0.2.0", notes)
       .split("\n")
       .filter((l) => l.startsWith("- "))) {
       expect(l).toMatch(/\(#\d+\)$/);
     }
+  });
+
+  it("an item without a PR renders with no (#n)", () => {
+    const md = render("0.2.0", {
+      features: [],
+      fixes: [],
+      internal: [{ text: "Squashed setup" }],
+    });
+    expect(md).toContain("- Squashed setup\n");
+    expect(md).not.toContain("(#");
   });
 
   it("omits empty sections", () => {
@@ -77,8 +87,13 @@ describe("releaseNotesSchema", () => {
     expect(releaseNotesSchema.safeParse(notes).success).toBe(true);
   });
 
-  it("rejects items without a PR number", () => {
-    const bad = { ...notes, features: [{ text: "No number" }] };
+  it("accepts items without a PR number (merges, direct pushes)", () => {
+    const ok = { ...notes, features: [{ text: "No number" }] };
+    expect(releaseNotesSchema.safeParse(ok).success).toBe(true);
+  });
+
+  it("rejects a zero or negative PR number", () => {
+    const bad = { ...notes, fixes: [{ text: "x", pr: 0 }] };
     expect(releaseNotesSchema.safeParse(bad).success).toBe(false);
   });
 

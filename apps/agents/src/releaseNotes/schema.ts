@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-const item = z.object({ text: z.string(), pr: z.number().int() });
+// pr is optional: some commits (merges, direct pushes) have no PR number
+const item = z.object({
+  text: z.string(),
+  pr: z.number().int().positive().optional(),
+});
 
 export const releaseNotesSchema = z.object({
   features: z.array(item),

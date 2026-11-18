@@ -15,4 +15,4 @@
   -- buildOptions(args): Exact tools, allowedTools, disallowedTools, permissionMode, settingSources; no bypassPermissions; CLI flags can only lower the limits
   -- get_pull_request handler, with a fake gh: Found → trimmed body. Not found → isError: true. A body of 10,000 chars → 1,500
   -- summarize(messages): Feed it a recorded JSONL from a real run (your hello run!). Each message.id counted once, cost from the result, subtype reported
-  -- The renderer: JSON in → markdown out, sections in order, every line has (#n)
+  -- The renderer: JSON in → markdown out, sections in order, every line with a PR has (#n); commits with no PR render without one (never invented)

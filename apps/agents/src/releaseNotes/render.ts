@@ -12,7 +12,9 @@ export function render(version: string, notes: ReleaseNotes): string {
     const items = notes[key];
     if (items.length === 0) continue;
     parts.push(
-      `## ${title}\n\n${items.map((i) => `- ${i.text} (#${i.pr})`).join("\n")}`,
+      `## ${title}\n\n${items
+        .map((i) => (i.pr === undefined ? `- ${i.text}` : `- ${i.text} (#${i.pr})`))
+        .join("\n")}`,
     );
   }
   return parts.join("\n\n") + "\n";

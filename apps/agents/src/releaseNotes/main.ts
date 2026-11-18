@@ -57,6 +57,7 @@ async function main(): Promise<number> {
         } else {
           console.error("structured output failed validation");
         }
+        break; // done: a late abort must not flip the exit code after the file is written
       }
     }
   } catch (err) {
