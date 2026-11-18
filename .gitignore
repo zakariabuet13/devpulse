@@ -3,6 +3,7 @@ node_modules
 dist
 .env*
 !.env.example
+runs/
 *.tsbuildinfo
 *.local.md
 *.local.json
